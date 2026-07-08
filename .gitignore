@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+output/
+*.png
+.env
+*.env
+quant.env
+.venv/
+venv/
+*.key
+private.*.key
+notify.log
+.DS_Store

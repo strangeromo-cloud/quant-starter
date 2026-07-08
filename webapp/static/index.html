@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>量化回测平台</title>
+<script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+         background: #0f1419; color: #e3e8ee; font-size: 14px; }
+  .app { display: grid; grid-template-columns: 300px 1fr; min-height: 100vh; }
+  .sidebar { background: #171c26; padding: 20px; border-right: 1px solid #232a36; }
+  .main { padding: 20px 28px; }
+  h1 { font-size: 18px; margin-bottom: 4px; }
+  .sub { color: #7a8699; font-size: 12px; margin-bottom: 20px; }
+  .field { margin-bottom: 14px; }
+  label { display: block; font-size: 12px; color: #9aa7ba; margin-bottom: 5px; }
+  input, select { width: 100%; padding: 8px 10px; background: #0f1419;
+    border: 1px solid #2a3340; border-radius: 7px; color: #e3e8ee; font-size: 13px; }
+  input:focus, select:focus { outline: none; border-color: #3b82f6; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  button { cursor: pointer; border: none; border-radius: 7px; font-size: 13px; }
+  .btn-run { width: 100%; padding: 11px; background: #3b82f6; color: #fff;
+    font-weight: 600; margin-top: 6px; }
+  .btn-run:hover { background: #2f6fe0; }
+  .btn-run:disabled { background: #2a3340; cursor: not-allowed; }
+  .status { padding: 9px 12px; border-radius: 7px; font-size: 12px; margin-bottom: 16px; }
+  .status.ok { background: #16341f; color: #7fdba0; }
+  .status.warn { background: #3a2a14; color: #f0c674; }
+  .card { background: #171c26; border: 1px solid #232a36; border-radius: 12px;
+    padding: 18px; margin-bottom: 18px; }
+  .card h2 { font-size: 14px; margin-bottom: 12px; color: #c8d2e0; }
+  #chart { width: 100%; height: 420px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th, td { padding: 9px 10px; text-align: right; border-bottom: 1px solid #232a36; }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: #7a8699; font-weight: 500; }
+  tr:hover td { background: #1b212c; }
+  .name-cell { color: #cdd6e3; font-weight: 500; }
+  .pos { color: #4ade80; } .neg { color: #f87171; }
+  .del { background: transparent; color: #6b7688; padding: 3px 7px; font-size: 12px; }
+  .del:hover { color: #f87171; }
+  .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px;
+    margin-right: 7px; vertical-align: middle; }
+  .empty { color: #5a6678; text-align: center; padding: 30px; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+  .tab { padding: 8px 16px; background: #171c26; border: 1px solid #232a36;
+    border-radius: 8px; color: #9aa7ba; font-size: 13px; cursor: pointer; }
+  .tab.active { background: #3b82f6; color: #fff; border-color: #3b82f6; }
+  textarea { width: 100%; padding: 8px 10px; background: #0f1419; border: 1px solid #2a3340;
+    border-radius: 7px; color: #e3e8ee; font-size: 13px; font-family: inherit; resize: vertical; }
+  textarea:focus { outline: none; border-color: #3b82f6; }
+  .pf-actions { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+  .pf-actions .field { margin-bottom: 0; }
+  .sig { display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-bottom: 1px solid #232a36; }
+  .sig:last-child { border-bottom: none; }
+  .sig-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+  .sig-name { font-weight: 600; min-width: 84px; color: #cdd6e3; }
+  .sig-action { flex: 1; color: #d2dae6; font-size: 13px; }
+  .sig-num { color: #6b7688; font-size: 11.5px; margin-left: 6px; }
+  .toast { position: fixed; top: 20px; right: 20px; padding: 12px 18px;
+    border-radius: 8px; background: #232a36; color: #e3e8ee; font-size: 13px;
+    box-shadow: 0 6px 24px rgba(0,0,0,.4); opacity: 0; transition: .3s; z-index: 99; }
+  .toast.show { opacity: 1; }
+  .toast.err { background: #3a1a1a; color: #f8a0a0; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <h1>📈 量化回测平台</h1>
+    <div class="sub">多市场·多策略对比</div>
+
+    <div class="field">
+      <label>市场</label>
+      <select id="market" onchange="onMarketChange()">
+        <option value="A">A股(沪深300)</option>
+        <option value="US">美股(纳斯达克)</option>
+        <option value="HK">港股(恒生)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>策略</label>
+      <select id="strategy" onchange="onStrategyChange()"></select>
+    </div>
+    <div class="field" id="timingField" style="display:none">
+      <label>风控均线(天) · 跌破则空仓</label>
+      <input id="timing_ma" type="number" value="200" min="20" max="500">
+    </div>
+    <div class="field" id="weightField" style="display:none">
+      <label id="weightLabel">因子权重 0~1</label>
+      <input id="factor_weight" type="number" value="0.5" min="0" max="1" step="0.1">
+    </div>
+    <div class="field" id="indexField">
+      <label>股票池指数</label>
+      <select id="index_code">
+        <option value="000300.SH">沪深300</option>
+        <option value="000905.SH">中证500</option>
+        <option value="000852.SH">中证1000</option>
+      </select>
+    </div>
+    <div class="field" id="poolNote" style="display:none">
+      <label>股票池</label>
+      <div style="padding:8px 10px;background:#0f1419;border:1px solid #2a3340;border-radius:7px;color:#7a8699;font-size:12px" id="poolNoteText"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>动量回看(月)</label><input id="lookback" type="number" value="6" min="1" max="24"></div>
+      <div class="field"><label>持仓数</label><input id="top_n" type="number" value="20" min="1" max="100"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>开始</label><input id="start" value="20180101"></div>
+      <div class="field"><label>结束</label><input id="end" value="20251231"></div>
+    </div>
+    <div class="field">
+      <label>命名(可选)</label><input id="name" placeholder="自动生成">
+    </div>
+    <button class="btn-run" id="runBtn" onclick="runBacktest()">▶ 跑回测</button>
+  </aside>
+
+  <main class="main">
+    <div class="tabs">
+      <button class="tab active" id="tabBT" onclick="switchTab('bt')">📊 策略回测</button>
+      <button class="tab" id="tabPF" onclick="switchTab('pf')">💼 我的持仓</button>
+    </div>
+
+    <div id="viewBacktest">
+      <div id="status" class="status warn">检查数据状态…</div>
+      <div class="card">
+        <h2>净值对比</h2>
+        <div id="chart"></div>
+      </div>
+      <div class="card">
+        <h2>回测记录 <span style="color:#5a6678;font-weight:400">（勾选叠加到上图对比，最多 8 条）</span></h2>
+        <div id="runsWrap"><div class="empty">还没有回测记录，左侧跑一个吧</div></div>
+      </div>
+    </div>
+
+    <div id="viewPortfolio" style="display:none">
+      <div class="card">
+        <h2>我的持仓</h2>
+        <label>标的代码（逗号分隔 · 港股如 00700.HK · 美股如 NVDA）</label>
+        <textarea id="pfTickers" rows="2" placeholder="加载中…"></textarea>
+        <div class="pf-actions" style="margin-top:10px">
+          <div class="field"><label>开始</label><input id="pfStart" value="20180101" style="width:110px"></div>
+          <div class="field"><label>结束</label><input id="pfEnd" value="20261231" style="width:110px"></div>
+          <button class="btn-run" style="width:auto;padding:11px 22px" id="pfBtn" onclick="analyzePortfolio()">分析持仓</button>
+          <button class="btn-run" style="width:auto;padding:11px 18px;background:#2a3340" id="pfRefreshBtn" onclick="refreshHoldings()">🔄 刷新行情</button>
+        </div>
+        <div id="pfMissing" style="color:#f0c674;font-size:12px;margin-top:8px"></div>
+      </div>
+      <div class="card">
+        <h2>⛨ 持仓择时信号 <span style="color:#5a6678;font-weight:400">（每只相对自己年线 MA200 → 操作提示）</span></h2>
+        <div id="pfSignals"><div class="empty">点上方「分析持仓」</div></div>
+      </div>
+      <div class="card">
+        <h2>归一化净值对比 <span style="color:#5a6678;font-weight:400">（各标的起点=1，看走势是否同步）</span></h2>
+        <div id="pfChart" style="width:100%;height:380px"></div>
+      </div>
+      <div class="card">
+        <h2>相关性热力图 <span id="pfAvgCorr" style="font-weight:400"></span></h2>
+        <div style="color:#5a6678;font-size:12px;margin-bottom:8px">红=高度同涨同跌（无分散效果）· 蓝=低相关/反向（有对冲价值）</div>
+        <div id="pfHeat" style="width:100%;height:380px"></div>
+      </div>
+      <div class="card">
+        <h2>各标的风险指标</h2>
+        <div id="pfMetrics"><div class="empty">点上方「分析持仓」</div></div>
+      </div>
+    </div>
+  </main>
+</div>
+<div id="toast" class="toast"></div>
+
+<script>
+const COLORS = ["#3b82f6","#f59e0b","#4ade80","#a78bfa","#f472b6","#22d3ee","#fb7185","#facc15"];
+let chart, runsCache = {}, selected = new Set(), MARKETS = {};
+const STRAT_LABELS = {
+  momentum:'动量轮动', momentum_timing:'动量轮动 + 风控择时',
+  multifactor:'多因子(动量+低估值)', multifactor_timing:'多因子 + 风控择时',
+  quality:'动量+质量(高ROE)', quality_timing:'动量+质量 + 风控择时',
+};
+
+function toast(msg, isErr) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show' + (isErr ? ' err' : '');
+  setTimeout(() => t.className = 'toast', 2600);
+}
+
+async function api(path, opts) {
+  const r = await fetch(path, opts);
+  if (!r.ok) { const e = await r.json().catch(()=>({detail:r.statusText})); throw new Error(e.detail || 'error'); }
+  return r.json();
+}
+
+async function checkHealth() {
+  try {
+    const h = await api('/api/health');
+    const el = document.getElementById('status');
+    if (h.data_ready) { el.className = 'status ok'; el.textContent = '✓ 数据已就绪，可以回测'; }
+    else { el.className = 'status warn';
+      el.textContent = '⚠ 数据未同步：请先在服务器跑一次数据同步（run.py / deploy.sh）'; }
+  } catch(e) { document.getElementById('status').textContent = '无法连接后端: ' + e.message; }
+}
+
+async function runBacktest() {
+  const btn = document.getElementById('runBtn');
+  btn.disabled = true; btn.textContent = '回测中…';
+  const s = val('strategy'), fw = +val('factor_weight');
+  const body = {
+    name: val('name'), strategy: s, market: val('market'), index_code: val('index_code'),
+    lookback: +val('lookback'), top_n: +val('top_n'), timing_ma: +val('timing_ma'),
+    value_weight: s.includes('quality') ? 0.5 : fw,
+    quality_weight: s.includes('quality') ? fw : 0.5,
+    start: val('start'), end: val('end'),
+  };
+  try {
+    const res = await api('/api/backtest', {method:'POST',
+      headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+    toast('回测完成: ' + res.name);
+    await loadRuns();
+    selected.add(res.id); renderChart();
+  } catch(e) { toast('回测失败: ' + e.message, true); }
+  btn.disabled = false; btn.textContent = '▶ 跑回测';
+}
+
+function val(id){ return document.getElementById(id).value; }
+
+async function refreshHoldings() {
+  const btn = document.getElementById('pfRefreshBtn');
+  const tickers = val('pfTickers').split(/[,，\s]+/).map(s => s.trim()).filter(Boolean);
+  if (!tickers.length) { toast('请输入标的代码', true); return; }
+  btn.disabled = true; btn.textContent = '刷新中…';
+  try {
+    const r = await api('/api/portfolio/refresh', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({tickers})});
+    const msg = `已更新 ${r.updated.length} 只` + (r.failed.length ? `，失败 ${r.failed.join(',')}（稍后重试）` : '');
+    toast(msg, r.failed.length > 0);
+    await analyzePortfolio();  // 刷新后自动重算
+  } catch(e) { toast('刷新失败: ' + e.message, true); }
+  btn.disabled = false; btn.textContent = '🔄 刷新行情';
+}
+
+function onStrategyChange() {
+  const s = val('strategy');
+  document.getElementById('timingField').style.display = s.includes('timing') ? 'block' : 'none';
+  const isFactor = s.includes('multifactor') || s.includes('quality');
+  document.getElementById('weightField').style.display = isFactor ? 'block' : 'none';
+  document.getElementById('weightLabel').textContent =
+    s.includes('quality') ? '质量权重 0~1 · 越大越看重高ROE'
+                          : '估值权重 0~1 · 越大越看重便宜';
+}
+
+async function loadMarkets() {
+  try {
+    const meta = await api('/api/meta');
+    (meta.markets || []).forEach(m => MARKETS[m.key] = m);
+    onMarketChange();
+  } catch(e) {}
+}
+
+function onMarketChange() {
+  const mk = val('market'), m = MARKETS[mk];
+  // 重建策略下拉（港美股只有动量/动量+风控）
+  const allowed = (m && m.strategies) || Object.keys(STRAT_LABELS);
+  const sel = document.getElementById('strategy');
+  const cur = sel.value;
+  sel.innerHTML = allowed.map(k => `<option value="${k}">${STRAT_LABELS[k]}</option>`).join('');
+  if (allowed.includes(cur)) sel.value = cur;
+  // 股票池：A股用指数下拉，港美股用固定池说明
+  const isA = mk === 'A';
+  document.getElementById('indexField').style.display = isA ? 'block' : 'none';
+  document.getElementById('poolNote').style.display = isA ? 'none' : 'block';
+  if (!isA && m) document.getElementById('poolNoteText').textContent = m.pool;
+  onStrategyChange();
+}
+
+async function loadRuns() {
+  const {runs} = await api('/api/runs');
+  const wrap = document.getElementById('runsWrap');
+  if (!runs.length) { wrap.innerHTML = '<div class="empty">还没有回测记录</div>'; return; }
+  let html = '<table><thead><tr><th>策略</th><th>参数</th>'
+    + '<th>年化</th><th>夏普</th><th>最大回撤</th><th>胜率</th><th></th></tr></thead><tbody>';
+  runs.forEach((r, i) => {
+    const m = r.metrics, p = r.params;
+    const ann = m['年化收益(CAGR)'] || '-';
+    const cls = ann.startsWith('-') ? 'neg' : 'pos';
+    const color = COLORS[[...selected].indexOf(r.id) % COLORS.length];
+    const sw = selected.has(r.id) ? `<span class="swatch" style="background:${color}"></span>` : '';
+    html += `<tr>
+      <td class="name-cell"><input type="checkbox" ${selected.has(r.id)?'checked':''}
+           onchange="toggle(${r.id})" style="width:auto;margin-right:8px;vertical-align:middle">
+           ${sw}${esc(r.name)}</td>
+      <td>${p.market&&p.market!=='A'?`<span style="color:#4ade80">${p.market}</span> `:''}${(p.strategy||'').includes('multifactor')?`<span style="color:#a78bfa">估${p.value_weight}</span> `:''}${(p.strategy||'').includes('quality')?`<span style="color:#22d3ee">质${p.quality_weight}</span> `:''}${(p.strategy||'').includes('timing')?`<span style="color:#f59e0b">⛨MA${p.timing_ma}</span> `:''}L${p.lookback}/Top${p.top_n}</td>
+      <td class="${cls}">${ann}</td>
+      <td>${m['夏普比率']||'-'}</td>
+      <td class="neg">${m['最大回撤']||'-'}</td>
+      <td>${m['月度胜率']||'-'}</td>
+      <td><button class="del" onclick="delRun(${r.id})">删除</button></td></tr>`;
+  });
+  wrap.innerHTML = html + '</tbody></table>';
+}
+
+async function toggle(id) {
+  if (selected.has(id)) selected.delete(id);
+  else { if (selected.size >= 8) { toast('最多对比 8 条', true); loadRuns(); return; } selected.add(id); }
+  renderChart(); loadRuns();
+}
+
+async function delRun(id) {
+  if (!confirm('删除这条回测记录？')) return;
+  await api('/api/runs/' + id, {method:'DELETE'});
+  selected.delete(id); delete runsCache[id];
+  toast('已删除'); loadRuns(); renderChart();
+}
+
+async function renderChart() {
+  const series = [], legend = [];
+  let benchPlotted = false;
+  for (const id of selected) {
+    if (!runsCache[id]) runsCache[id] = await api('/api/runs/' + id);
+    const run = runsCache[id];
+    const nav = run.nav.strategy || run.nav;       // 兼容旧格式
+    legend.push(run.name);
+    series.push({ name: run.name, type:'line', showSymbol:false, smooth:true,
+      data: nav.dates.map((d,i)=>[d, nav.values[i]]) });
+    if (!benchPlotted && run.nav.benchmark && run.nav.benchmark.dates.length) {
+      const b = run.nav.benchmark;
+      legend.push('沪深300基准');
+      series.push({ name:'沪深300基准', type:'line', showSymbol:false, smooth:true,
+        lineStyle:{type:'dashed',color:'#6b7688'}, itemStyle:{color:'#6b7688'},
+        data: b.dates.map((d,i)=>[d, b.values[i]]) });
+      benchPlotted = true;
+    }
+  }
+  if (!chart) chart = echarts.init(document.getElementById('chart'), 'dark');
+  chart.setOption({
+    backgroundColor: 'transparent',
+    color: COLORS,
+    tooltip: { trigger:'axis' },
+    legend: { data: legend, textStyle:{color:'#9aa7ba'}, top: 0 },
+    grid: { left: 50, right: 20, top: 40, bottom: 40 },
+    xAxis: { type:'time', axisLine:{lineStyle:{color:'#2a3340'}} },
+    yAxis: { type:'value', scale:true, name:'净值', axisLine:{lineStyle:{color:'#2a3340'}},
+      splitLine:{lineStyle:{color:'#1b212c'}} },
+    series: series.length ? series : [],
+  }, true);
+  if (!series.length) chart.clear();
+}
+
+function esc(s){ return String(s).replace(/[<>&]/g, c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])); }
+
+// ===== 我的持仓 =====
+let pfChart, pfHeat;
+
+function switchTab(which) {
+  const bt = which === 'bt';
+  document.getElementById('tabBT').classList.toggle('active', bt);
+  document.getElementById('tabPF').classList.toggle('active', !bt);
+  document.getElementById('viewBacktest').style.display = bt ? 'block' : 'none';
+  document.getElementById('viewPortfolio').style.display = bt ? 'none' : 'block';
+  // 持仓视图隐藏回测侧边栏，主区占满
+  document.querySelector('.sidebar').style.display = bt ? 'block' : 'none';
+  document.querySelector('.app').style.gridTemplateColumns = bt ? '300px 1fr' : '1fr';
+  if (!bt) setTimeout(() => { pfChart && pfChart.resize(); pfHeat && pfHeat.resize(); }, 50);
+}
+
+async function loadPortfolioDefaults() {
+  try {
+    const d = await api('/api/portfolio/defaults');
+    document.getElementById('pfTickers').value = (d.tickers || []).join(', ');
+  } catch(e) {}
+}
+
+async function analyzePortfolio() {
+  const btn = document.getElementById('pfBtn');
+  const tickers = val('pfTickers').split(/[,，\s]+/).map(s => s.trim()).filter(Boolean);
+  if (!tickers.length) { toast('请输入标的代码', true); return; }
+  btn.disabled = true; btn.textContent = '分析中…';
+  try {
+    const r = await api('/api/portfolio', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({tickers, start: val('pfStart'), end: val('pfEnd')})});
+    renderPfChart(r); renderHeatmap(r); renderPfMetrics(r);
+    document.getElementById('pfMissing').textContent =
+      (r.missing && r.missing.length) ? '⚠ 区间内数据不足已跳过：' + r.missing.join(', ') + '（智谱为次新股 / SpaceX 未上市）' : '';
+    // 择时信号
+    const sg = await api('/api/portfolio/signals', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({tickers, ma_days: 200})});
+    renderSignals(sg.signals);
+  } catch(e) { toast('分析失败: ' + e.message, true); }
+  btn.disabled = false; btn.textContent = '分析持仓';
+}
+
+function nm(r, t) { return (r.names && r.names[t]) || t; }
+
+function renderSignals(sigs) {
+  const colors = {strong:'#4ade80', near_up:'#a3e635', near_down:'#f59e0b',
+                  weak:'#f87171', insufficient:'#5a6678', no_data:'#5a6678'};
+  if (!sigs || !sigs.length) { document.getElementById('pfSignals').innerHTML = '<div class="empty">无</div>'; return; }
+  let html = '';
+  sigs.forEach(s => {
+    const col = colors[s.status] || '#5a6688';
+    let nums = '';
+    if (s.real_price) nums = `<span class="sig-num">现价 ${s.price} / 年线 ${s.ma}（${s.dist}）· 截至 ${s.asof}</span>`;
+    else if (s.dist) nums = `<span class="sig-num">距年线 ${s.dist} · ${s.src || ''}</span>`;
+    else if (s.asof) nums = `<span class="sig-num">截至 ${s.asof}</span>`;
+    html += `<div class="sig"><span class="sig-dot" style="background:${col}"></span>
+      <span class="sig-name">${s.name}</span>
+      <span class="sig-action">${s.action}${nums}</span></div>`;
+  });
+  document.getElementById('pfSignals').innerHTML = html;
+}
+
+function renderPfChart(r) {
+  const series = Object.keys(r.series).map(t => ({
+    name: nm(r, t), type:'line', showSymbol:false, smooth:true,
+    data: r.series[t].dates.map((d,i) => [d, r.series[t].values[i]]),
+  }));
+  if (!pfChart) pfChart = echarts.init(document.getElementById('pfChart'), 'dark');
+  pfChart.setOption({
+    backgroundColor:'transparent', color: COLORS,
+    tooltip:{trigger:'axis'}, legend:{textStyle:{color:'#9aa7ba'}, top:0, type:'scroll'},
+    grid:{left:50,right:20,top:40,bottom:40},
+    xAxis:{type:'time', axisLine:{lineStyle:{color:'#2a3340'}}},
+    yAxis:{type:'value', scale:true, axisLine:{lineStyle:{color:'#2a3340'}}, splitLine:{lineStyle:{color:'#1b212c'}}},
+    series,
+  }, true);
+}
+
+function renderHeatmap(r) {
+  const c = r.correlation; if (!c) return;
+  const labels = c.tickers.map(t => nm(r, t));
+  const data = [];
+  for (let i=0;i<c.tickers.length;i++) for (let j=0;j<c.tickers.length;j++)
+    if (c.matrix[i][j] !== null) data.push([j, i, c.matrix[i][j]]);  // 无重叠的格子留空
+  document.getElementById('pfAvgCorr').textContent =
+    c.avg != null ? `平均相关性 ${c.avg}` + (c.avg>=0.6?'（高度同涨同跌 ⚠）':c.avg>=0.4?'（中等相关）':'（较分散）') : '';
+  if (!pfHeat) pfHeat = echarts.init(document.getElementById('pfHeat'), 'dark');
+  pfHeat.setOption({
+    backgroundColor:'transparent',
+    tooltip:{position:'top', formatter:p=>`${labels[p.data[1]]} × ${labels[p.data[0]]}<br/>相关性 ${p.data[2]}`},
+    grid:{height:'62%', top:'8%', left:80, right:30},
+    xAxis:{type:'category', data:labels, axisLabel:{rotate:35, color:'#9aa7ba', fontSize:11}, splitArea:{show:true}},
+    yAxis:{type:'category', data:labels, axisLabel:{color:'#9aa7ba', fontSize:11}, splitArea:{show:true}},
+    visualMap:{min:-1, max:1, calculable:true, orient:'horizontal', left:'center', bottom:0,
+      textStyle:{color:'#9aa7ba'}, inRange:{color:['#1e40af','#0f1419','#b91c1c']}},
+    series:[{type:'heatmap', data, label:{show:true, color:'#e3e8ee', fontSize:10},
+      emphasis:{itemStyle:{shadowBlur:8, shadowColor:'rgba(0,0,0,0.5)'}}}],
+  }, true);
+}
+
+function renderPfMetrics(r) {
+  const ts = Object.keys(r.metrics);
+  if (!ts.length) { document.getElementById('pfMetrics').innerHTML = '<div class="empty">无数据</div>'; return; }
+  let html = '<table><thead><tr><th>标的</th><th>区间收益</th><th>年化波动</th><th>最大回撤</th><th>数据天数</th></tr></thead><tbody>';
+  ts.forEach(t => {
+    const m = r.metrics[t];
+    const cls = m.total_return.startsWith('-') ? 'neg' : 'pos';
+    html += `<tr><td class="name-cell">${nm(r,t)} <span style="color:#5a6678">${t}</span></td>
+      <td class="${cls}">${m.total_return}</td><td>${m.ann_vol}</td>
+      <td class="neg">${m.max_dd}</td><td>${m.days}</td></tr>`;
+  });
+  if (r.portfolio) {
+    const p = r.portfolio;
+    html += `<tr style="border-top:2px solid #3b82f6"><td class="name-cell" style="color:#3b82f6">等权组合</td>
+      <td class="${p.total_return.startsWith('-')?'neg':'pos'}">${p.total_return}</td>
+      <td>${p.ann_vol}</td><td class="neg">${p.max_dd}</td><td style="color:#5a6678">${p.window}</td></tr>`;
+  }
+  document.getElementById('pfMetrics').innerHTML = html + '</tbody></table>';
+}
+
+window.addEventListener('resize', () => { chart && chart.resize(); pfChart && pfChart.resize(); pfHeat && pfHeat.resize(); });
+checkHealth(); loadMarkets(); loadRuns(); loadPortfolioDefaults();
+</script>
+</body>
+</html>
