@@ -16,6 +16,7 @@ import data
 import signals
 import levels
 import macro
+import sector_rotation
 
 
 def _gen_sign(ts: str, secret: str) -> str:
@@ -78,7 +79,20 @@ def _macro_banner(mk: dict) -> dict:
     return {"tag": "div", "text": {"tag": "lark_md", "content": content}}
 
 
-def build_card(lvls: list, sigs: list, asof: str, mk: dict = None) -> dict:
+def _sector_banner(sec: dict) -> dict:
+    """板块强弱榜（动量集成排名，回测验证的轮动信号）。sec 为 None 时调用方跳过。"""
+    medals = ["🥇", "🥈", "🥉"]
+    top3 = "｜".join(f"{medals[i]} {sym} {m:+.0%}" for i, (sym, m) in enumerate(sec["ranking"][:3]))
+    mine = []
+    for sym, (rank, m) in sorted(sec["holding_ranks"].items(), key=lambda x: x[1][0]):
+        warn = " ⚠️" if rank > sec["total"] * 2 / 3 else ""
+        mine.append(f"{sym}({sector_rotation.HOLDING_SECTORS[sym]}) #{rank}{warn}")
+    content = (f"📊 **板块强弱榜**（3/6/12月动量集成）\n{top3}\n"
+               f"<font color='grey'>你的板块：{' · '.join(mine)}（共{sec['total']}个）</font>")
+    return {"tag": "div", "text": {"tag": "lark_md", "content": content}}
+
+
+def build_card(lvls: list, sigs: list, asof: str, mk: dict = None, sec: dict = None) -> dict:
     sig_by_ticker = {s["ticker"]: s for s in sigs}
 
     # 触发区（置顶高亮，带理由）
@@ -101,6 +115,9 @@ def build_card(lvls: list, sigs: list, asof: str, mk: dict = None) -> dict:
     elements = []
     if mk:  # 市场风险环境横幅置顶
         elements.append(_macro_banner(mk))
+        elements.append({"tag": "hr"})
+    if sec:  # 板块强弱榜
+        elements.append(_sector_banner(sec))
         elements.append({"tag": "hr"})
     if hit_blocks:
         elements.append({"tag": "div", "text": {"tag": "lark_md",
@@ -129,9 +146,10 @@ def main():
     lvls = levels.compute(tickers)
     sigs = signals.compute(tickers, ma_days=200)
     mk = macro.assess_market_risk()  # 市场风险环境（取数失败返回 None，不影响推送）
+    sec = sector_rotation.compute()  # 板块强弱榜（失败返回 None，不影响推送）
     asof = (next((lv.get("asof") for lv in lvls if lv.get("asof")), "")
             or next((s.get("asof") for s in sigs if s.get("asof")), ""))
-    resp = send_lark_card(build_card(lvls, sigs, asof, mk))
+    resp = send_lark_card(build_card(lvls, sigs, asof, mk, sec))
     print("[notify] Lark 响应:", resp)
 
 
