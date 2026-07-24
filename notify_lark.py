@@ -55,6 +55,8 @@ def _fmt_full_line(lv: dict, sig_action: str) -> str:
         sl_tag = "损" if lv["sl_kind"] == "止损" else "移损"
         sl_seg = f"{sl_tag} {lv['stop_loss']}"
     body = f"**{lv['name']}**　现 {lv['price']}｜买 {lv['buy']}｜盈 {tp}｜{sl_seg}"
+    if lv.get("cc_strike"):
+        body += f"｜租≥{lv['cc_strike']}"
     tail = f"距买 {lv['to_buy']}"
     if sig_action:
         tail += f" · {sig_action}"
@@ -127,7 +129,7 @@ def build_card(lvls: list, sigs: list, asof: str, mk: dict = None, sec: dict = N
                      "content": "📋 **持仓买卖点**\n\n" + "\n\n".join(full_lines)}})
     elements.append({"tag": "hr"})
     elements.append({"tag": "note", "elements": [{"tag": "plain_text",
-                     "content": "每日自动推送 · 买=近高回撤低吸 盈/损=止盈止损 · 仅技术信号，非投资建议"}]})
+                     "content": "每日自动推送 · 买=近高回撤低吸 盈/损=止盈止损 租=备兑call行权价下限(≥成本防锁损) · 仅技术信号，非投资建议"}]})
 
     return {
         "config": {"wide_screen_mode": True},

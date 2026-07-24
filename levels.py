@@ -92,6 +92,8 @@ def compute(tickers: list) -> list:
 
         # --- 止盈 / 止损 ---
         take_profit = round(cost * (1 + p["take_profit"]), 2) if (held and cost) else None
+        # 备兑 call 参考行权价：max(成本, 现价×1.05)——贴近现价有租金，但永不低于成本（避免锁损陷阱）
+        cc_strike = round(max(cost, price * 1.05), 2) if (held and cost) else None
         use_chand = bool(p.get("use_chandelier", True)) and chandelier is not None
         if not held:
             stop_loss, sl_kind = None, "空仓"
@@ -141,6 +143,7 @@ def compute(tickers: list) -> list:
             "ticker": t, "name": name, "status": "ok", "asof": asof,
             "price": round(price, 2), "buy": buy,
             "take_profit": take_profit, "stop_loss": stop_loss, "sl_kind": sl_kind,
+            "cc_strike": cc_strike,
             "cost": round(cost, 2) if cost else None,
             "recent_high": recent_high, "recent_low": recent_low, "ma": ma,
             "uptrend": uptrend, "buy_gated": buy_gated,
