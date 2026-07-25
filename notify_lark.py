@@ -82,16 +82,33 @@ def _macro_banner(mk: dict) -> dict:
 
 
 def _sector_banner(sec: dict) -> dict:
-    """板块强弱榜（动量集成排名，回测验证的轮动信号）。sec 为 None 时调用方跳过。"""
+    """板块强弱榜 + 短线热度雷达 + 月度轮动执行视图。sec 为 None 时调用方跳过。"""
+    nm = sector_rotation.NAMES
     medals = ["🥇", "🥈", "🥉"]
     top3 = "｜".join(f"{medals[i]} {sym} {m:+.0%}" for i, (sym, m) in enumerate(sec["ranking"][:3]))
     mine = []
     for sym, (rank, m) in sorted(sec["holding_ranks"].items(), key=lambda x: x[1][0]):
         warn = " ⚠️" if rank > sec["total"] * 2 / 3 else ""
         mine.append(f"{sym}({sector_rotation.HOLDING_SECTORS[sym]}) #{rank}{warn}")
-    content = (f"📊 **板块强弱榜**（3/6/12月动量集成）\n{top3}\n"
-               f"<font color='grey'>你的板块：{' · '.join(mine)}（共{sec['total']}个）</font>")
-    return {"tag": "div", "text": {"tag": "lark_md", "content": content}}
+    lines = [f"📊 **板块强弱榜**（3/6/12月动量集成）\n{top3}\n"
+             f"<font color='grey'>你的板块：{' · '.join(mine)}（共{sec['total']}个）</font>"]
+    if sec.get("heat"):
+        hot = "｜".join(f"{nm.get(s, s)}{s} {m20:+.0%}(5日{m5:+.0%})"
+                        for s, m20, m5 in sec["heat"][:3])
+        lines.append(f"🔥 **短线热度**(20日)：{hot}\n"
+                     f"<font color='grey'>仅观察雷达——回测：快速追热年化+5.4%远逊月度轮动+9.6%，勿按此交易</font>")
+    rot = sec.get("rotation")
+    if rot:
+        if not rot["gate_on"]:
+            pos = "💰 现金（SPY跌破年线，趋势门关闭）"
+        else:
+            pos = "·".join(f"{nm.get(s, s)}{s}" for s in rot["holdings"])
+        line = f"🔄 **轮动策略持仓**（月末调仓）：{pos}"
+        if rot["month_end_soon"] and rot["preview"] != rot["holdings"]:
+            new = "·".join(f"{nm.get(s, s)}{s}" for s in rot["preview"])
+            line += f"\n<font color='grey'>⏰ 月末将至，最新排名前3：{new}（月末收盘生效）</font>"
+        lines.append(line)
+    return {"tag": "div", "text": {"tag": "lark_md", "content": "\n".join(lines)}}
 
 
 def build_card(lvls: list, sigs: list, asof: str, mk: dict = None, sec: dict = None) -> dict:
