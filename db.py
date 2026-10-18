@@ -92,15 +92,24 @@ def init_tables():
         for stmt in ddl:
             conn.execute(text(stmt))
     _migrate_recent_price_ohlc()
+    try:  # swing 表失败不能拖垮现有建表流程（webapp 启动 / run.py）
+        ensure_swing_schema(force=True)
+    except Exception as e:
+        print("[db] swing 表迁移失败（不影响现有表）:", repr(e)[:160])
 
 
-def _migrate_recent_price_ohlc():
-    """给 recent_price 补 high/low 列（幂等）。真 ATR/Chandelier 止损需要高低价。"""
+def _recent_price_columns() -> set:
+    """recent_price 现有列名（小写）。"""
     have = read_sql(
         "SELECT column_name AS col FROM information_schema.columns "
         "WHERE table_schema = DATABASE() AND table_name = 'recent_price'")
     have.columns = [c.lower() for c in have.columns]  # MySQL 可能返回大写列名
-    cols = set(have["col"].str.lower()) if not have.empty else set()
+    return set(have["col"].str.lower()) if not have.empty else set()
+
+
+def _migrate_recent_price_ohlc():
+    """给 recent_price 补 high/low 列（幂等）。真 ATR/Chandelier 止损需要高低价。"""
+    cols = _recent_price_columns()
     alters = []
     if "high" not in cols:
         alters.append("ADD COLUMN high DOUBLE NULL AFTER close")
@@ -109,6 +118,102 @@ def _migrate_recent_price_ohlc():
     if alters:
         with get_engine().begin() as conn:
             conn.execute(text(f"ALTER TABLE recent_price {', '.join(alters)}"))
+
+
+# ---------- 短线动量（swing）表 ----------
+# 为什么单独一个 ensure_swing_schema()：历史教训——曾因"代码先上线、列后加"导致某天 8:00
+# 定时推送崩溃。所以新代码写库前**自己**先调一次幂等迁移，不依赖部署时有没有人跑 init_tables。
+# recent_price 新增的 open/volume 只由 swing 新代码写入；现有调用方 upsert 的列集合不变，
+# ON DUPLICATE KEY UPDATE 只更新它们自己给的列，不会把 open/volume 冲掉。
+
+_SWING_SCHEMA_OK = False
+
+SWING_DDL = [
+    """
+    CREATE TABLE IF NOT EXISTS swing_watchlist (
+        ts_code    VARCHAR(16) NOT NULL,
+        name       VARCHAR(80) NULL,
+        market     SMALLINT    NULL,
+        added_date DATE        NULL,
+        last_seen  DATE        NULL,
+        source     VARCHAR(8)  NULL,
+        active     TINYINT     NOT NULL DEFAULT 1,
+        PRIMARY KEY (ts_code)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS swing_signals (
+        id           INT AUTO_INCREMENT PRIMARY KEY,
+        signal_date  DATE        NOT NULL,
+        ts_code      VARCHAR(16) NOT NULL,
+        name         VARCHAR(80) NULL,
+        setup        VARCHAR(12) NOT NULL,
+        `trigger`    DOUBLE      NOT NULL,
+        `stop`       DOUBLE      NOT NULL,
+        stop_pct     DOUBLE      NULL,
+        adr_pct      DOUBLE      NULL,
+        quality      DOUBLE      NULL,
+        status       VARCHAR(10) NOT NULL DEFAULT 'pending',
+        entry_date   DATE        NULL,
+        entry_price  DOUBLE      NULL,
+        shares_frac  DOUBLE      NULL,
+        stop_now     DOUBLE      NULL,
+        exit_date    DATE        NULL,
+        exit_price   DOUBLE      NULL,
+        r_multiple   DOUBLE      NULL,
+        partial_done TINYINT     NOT NULL DEFAULT 0,
+        note         VARCHAR(255) NULL,
+        UNIQUE KEY uq_swing_sig (signal_date, ts_code, setup),
+        KEY idx_swing_status (status)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS swing_snapshot (
+        asof       DATE     NOT NULL,
+        payload    JSON     NOT NULL,
+        created_at DATETIME NOT NULL,
+        PRIMARY KEY (asof)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    """,
+]
+
+
+def _migrate_recent_price_ov():
+    """给 recent_price 补 open/volume 列（幂等）。EP 形态要跳空幅度和成交量，ADR/成交额也要 OHLCV。
+    依赖 high/low 已存在（先调 _migrate_recent_price_ohlc）。"""
+    cols = _recent_price_columns()
+    alters = []
+    if "open" not in cols:
+        alters.append("ADD COLUMN `open` DOUBLE NULL AFTER low")
+    if "volume" not in cols:
+        alters.append("ADD COLUMN volume DOUBLE NULL AFTER `open`")
+    if alters:
+        with get_engine().begin() as conn:
+            conn.execute(text(f"ALTER TABLE recent_price {', '.join(alters)}"))
+    return alters
+
+
+def ensure_swing_schema(force: bool = False) -> bool:
+    """swing 相关表 + recent_price 的 open/volume 列（幂等，同一进程只做一次）。
+    swing 新代码写库前调用；也挂在 init_tables 里。成功返回 True。"""
+    global _SWING_SCHEMA_OK
+    if _SWING_SCHEMA_OK and not force:
+        return True
+    with get_engine().begin() as conn:
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS recent_price (
+                ts_code    VARCHAR(12) NOT NULL,
+                trade_date DATE        NOT NULL,
+                close      DOUBLE      NOT NULL,
+                PRIMARY KEY (ts_code, trade_date)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        """))
+        for stmt in SWING_DDL:
+            conn.execute(text(stmt))
+    _migrate_recent_price_ohlc()
+    _migrate_recent_price_ov()
+    _SWING_SCHEMA_OK = True
+    return True
 
 
 def upsert_df(df: pd.DataFrame, table: str, key_cols: list):

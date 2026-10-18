@@ -96,3 +96,83 @@ WATCH_LEVELS = {
     "MU":       {"cost": 1030.73},
     "02513.HK": {"cost": None, "held": False},  # 空仓，仅提示回补买点
 }
+
+# ==== 美股短线动量（Martin Luk 式：回调 / 突破 / EP + 紧止损 + R 仓位）====
+# 规范日线规则 v1：回测（bt_swing.py）与生产纸面跟踪（swing_scan.py）必须用同一套参数。
+# 为什么集中在这里：一处改、两边同步；web 端读取时用 SWING.get(key, 默认值) 容错。
+SWING = {
+    # ---- 账户与风险（盘前作业卡片按这里算建议股数）----
+    "account_size": 10000,      # 账户规模（美元）
+    "risk_pct": 0.005,          # 每笔打到止损亏账户 0.5%（= 1R）
+    "max_position_pct": 0.25,   # 单仓市值 ≤ 25% 账户
+    "max_exposure_pct": 1.0,    # 总敞口 ≤ 100%（现金账户，无杠杆）
+    "max_stop_pct": 0.03,       # 止损距离上限 3%（变体 5%）；实际还受 ADR20/2 约束
+    "hard_stop_cap": 0.05,      # 绝对上限：任何情况下止损距离都不超过 5%
+    "min_stop_pct": 0.0,        # 止损距离下限（0 = 只要求 high>low，与回测一致；防 1R 为 0）
+    "open_skip_mult": 1.5,      # t+1 高开后 (open-stop)/open > max_stop×1.5 → 放弃不追
+    "cost_pct": 0.001,          # 单边成本/滑点 0.1%
+    # ---- 交易资格（t 日收盘时点，无未来函数）----
+    "price_min": 5,             # 价格 ≥ 5 美元
+    "dollar_vol_min": 5e7,      # 20 日均成交额 ≥ 5000 万美元
+    "mcap_min": 1e9,            # 市值 ≥ 10 亿美元（东财行情榜初筛用）
+    "adr_min": 0.035,           # ADR20 = 近 20 日 mean(high/low - 1) ≥ 3.5%
+    "adr_days": 20,
+    "dollar_vol_days": 20,
+    # ---- 均线 ----
+    "ema_fast": 9, "ema_mid": 21, "ema_slow": 50, "ema_long": 150,
+    "ema21_rise_days": 5,       # 趋势叠层：EMA21 > 5 个交易日前的 EMA21
+    # ---- 观察名单 ----
+    "watch_topk": 20,           # 资格池按日涨幅前 20
+    "watch_min_gain": 0.03,     # 且日涨幅 ≥ 3%
+    "watch_days": 20,           # 保留 20 个交易日（收盘跌破 EMA50 提前移出）
+    "watch_cap": 40,            # 生产观察名单上限（控制每日 Twelve Data 调用量）
+    "rs_topk": 10,              # 冷启动/补充：东财 60 日涨幅前列最多补几只
+    "rs_fill_to": 25,           # 名单少于这么多只时才用 60 日涨幅补
+    # ---- 形态 ----
+    "pb_touch_tol": 0.005,      # 回调：low ≤ EMA9×(1+0.5%)
+    "pb_max_ext50": 0.25,       # 回调：close/EMA50-1 ≤ 25%（不追远离均线的）
+    "bo_range_adr_mult": 0.6,   # 突破：inside day 或 振幅 ≤ 0.6×ADR20×close
+    "bo_ema9_tol": 0.03,        # 突破：|close/EMA9-1| ≤ 3%
+    "bo_base_days": 10,         # 突破：近 10 日 (最高-最低)/close ≤ 3×ADR20
+    "bo_base_adr_mult": 3.0,
+    "ep_gap": 0.10,             # EP：open ≥ 昨收×1.10
+    "ep_vol_mult": 3.0,         # EP：量 ≥ 3×近 50 日均量
+    "ep_vol_days": 50,
+    "ep_cand_max": 10,          # 生产：名单外"当日跳空≥10%"候选最多取几只 K 线（财报季一天可能几十只，
+                                # 不设上限会挤掉名单股的 Twelve Data 额度、或让扫描拖过开盘）
+    # ---- 持仓管理 ----
+    "be_days": 3,               # 持满 3 个交易日且 EMA9>成交价 → 止损上移到成交价（保本）
+    "partial_ext": 0.20,        # close ≥ EMA9×1.20 → 收盘卖 15%（每笔最多一次）
+    "partial_frac": 0.15,
+    # ---- 市场过滤 / 连亏熔断（回测变体；生产里体现在交易环境结论上）----
+    "f1_index": "QQQ",
+    "f2_strong_min": 0.40,      # F2：资格池强档占比 ≥ 40% 才开新仓
+    "streak_half": 3,           # 连亏 3 笔 → 风险减半直到下一笔盈利
+    "streak_pause": 5,          # 连亏 5 笔 → 暂停开新仓
+    "pause_days": 2,
+    # ---- 交易环境（market_env.assess）----
+    "env_indices": ["QQQ", "IWM"],
+    "env_ext_days": 15,         # 延伸：连续 ≥15 天在 21EMA 上 且 距 21EMA 超过近一年 80 分位
+    "env_ext_pctl": 0.80,
+    "env_ext_weeks": 4,         # 或 连续 4 周上涨且没回到过 21EMA
+    "env_strong_stop": 0.20,    # 强档占比 < 20% → 休息观望
+    "env_breadth_drop": 0.10,   # 强档占比 5 日内下降 ≥10 个百分点 → 精选少做
+    "env_breadth_lag": 5,
+    "env_min_watch": 10,        # 观察名单不足 10 只 → 宽度退用 20 只板块/主题 ETF
+    "env_loss_streak": 3,       # 自己连亏 ≥3 笔 → 精选少做
+    # ---- 取数（Twelve Data 免费版 8 次/分钟、800 次/天，与生产其他推送共用）----
+    "td_pause_s": 9,            # 两次 Twelve Data 调用间隔 ≥ 9 秒
+    "td_429_wait_s": 65,        # 撞分钟限流等 65 秒重试
+    "td_budget": 80,            # 单次扫描最多调用次数（保护共享日额度）
+    "hist_full": 300,           # 首次取 300 根：Twelve Data 按调用次数计费、与根数无关；220 根时
+                                # EMA150 的首根种子权重还残留 5%，300 根降到 2%（强/弱档更准）
+    "hist_incr": 15,            # 之后增量取 15 根
+    "hist_keep": 320,           # 计算只用最近 320 根
+    "em_pages": 16,             # 东财行情榜按成交额最多翻 16 页（每页 100；成交额跌破 5000万$ 即提前停，
+                                # 实测合格池约 1400 只）
+    "em_page_pause_s": 1.5,     # 东财行情榜翻页间隔
+    "em_kline_pause_s": 3,      # 东财日K兜底：间隔 ≥3 秒 + 指数退避
+    # ---- 卡片 ----
+    "card_max_setups": 8,
+    "backtest_note": "日线回测2012-26：期望-0.31R/笔、年化-5.5%，远不及同池等权+16.7%，无优势",
+}

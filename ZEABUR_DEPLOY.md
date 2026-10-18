@@ -52,9 +52,13 @@ TZ=Asia/Shanghai
 Zeabur 里**再建一个服务**，同一 Git 仓库，类型选 **Cron Job**：
 - 启动命令覆盖为：`python notify_lark.py`
 - 环境变量同第 5 步（复用）
-- **两条计划（Zeabur cron 走 UTC，已换算）**：
-  - `0 0 * * *`  → 北京 **08:00**
-  - `30 8 * * *` → 北京 **16:30**
+- ⚠️ **时区（2026-10 实测踩坑）**：Zeabur 面板没有 cron，定时任务是用 kubectl 建的 k3s CronJob。
+  CronJob 不写 `timeZone` 时按**节点本地时间**解释，而这台节点 TZ=Asia/Shanghai（不是 UTC）。
+  原先按 UTC 换算写的 `0 0`/`30 8` 实际在北京 00:00 / 08:30 跑了约 3 个月。**一律显式写 `spec.timeZone: Asia/Shanghai`**，计划直接写北京时间：
+  - `quant-notify-morning`   `0 8 * * *`   → 北京 **08:00**（持仓买卖点卡）
+  - `quant-notify-afternoon` `30 16 * * *` → 北京 **16:30**
+  - `quant-notify-swing`     `30 20 * * 1-5` → 北京 **周一至五 20:30**（📡 短线观察雷达，美股开盘前：夏令时 21:30 / 冬令时 22:30）
+- 每次 git push 部署后，CronJob 的镜像 tag 不会自动跟随，需要 `k3s kubectl set image cronjob/<名> notify=<新镜像>`。
 
 ## 7. 绑域名 + 切 DNS 【你做】
 1. Zeabur web 服务 → Domains → 添加 `quant.xiuqilai.com`，按提示拿到 CNAME/A 目标。

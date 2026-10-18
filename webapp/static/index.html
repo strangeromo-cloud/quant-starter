@@ -64,6 +64,64 @@
     box-shadow: 0 6px 24px rgba(0,0,0,.4); opacity: 0; transition: .3s; z-index: 99; }
   .toast.show { opacity: 1; }
   .toast.err { background: #3a1a1a; color: #f8a0a0; }
+  /* ===== ⚡ 短线 ===== */
+  .main { min-width: 0; }   /* 网格子项默认 min-width:auto，宽表会把整页撑出横向滚动 */
+  .h-sub { color: #5a6678; font-weight: 400; font-size: 12px; }
+  .sw-top { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .sw-top .disclaimer { color: #5a6678; font-size: 12px; flex: 1; min-width: 240px; }
+  .sw-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .sw-grid > .card { min-width: 0; }
+  @media (max-width: 1100px) { .sw-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 760px) { .main { padding: 14px 12px; } .card { padding: 14px; } }
+  #viewSwing, .modal { color-scheme: dark; }   /* 表格横向滚动条、日期选择器跟随暗色 */
+  .tbl-wrap { overflow-x: auto; }
+  .tbl-wrap table td, .tbl-wrap table th { white-space: nowrap; }
+  td.tl, th.tl { text-align: left; }
+  .muted { color: #6b7688; } .small { font-size: 11.5px; }
+  .verdict { font-size: 26px; font-weight: 700; letter-spacing: .5px; }
+  .reasons { margin: 10px 0 4px 18px; color: #c8d2e0; line-height: 1.75; font-size: 13px; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11.5px; line-height: 1.5; }
+  .pill.strong { background: #16341f; color: #7fdba0; }
+  .pill.medium { background: #1e2a3d; color: #93c5fd; }
+  .pill.weak { background: #3a1a1a; color: #f8a0a0; }
+  .pill.pullback { background: #1e2a3d; color: #93c5fd; }
+  .pill.breakout { background: #2a1f3d; color: #c4b5fd; }
+  .pill.ep { background: #3a2a14; color: #f0c674; }
+  .pill.other, .pill.na { background: #232a36; color: #9aa7ba; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 10px; }
+  .tile { background: #0f1419; border: 1px solid #232a36; border-radius: 9px; padding: 9px 11px; }
+  .tile .k { color: #7a8699; font-size: 11.5px; }
+  .tile .v { font-size: 17px; font-weight: 600; margin-top: 3px; color: #e3e8ee; }
+  .tile .v.pos { color: #4ade80; } .tile .v.neg { color: #f87171; } .tile .v.muted { color: #9aa7ba; }
+  .tile .s { color: #6b7688; font-size: 11px; margin-top: 2px; }
+  .box { padding: 9px 12px; border-radius: 7px; font-size: 12.5px; margin-top: 10px; line-height: 1.6; }
+  .box.g { background: #16341f; color: #7fdba0; }
+  .box.y { background: #3a2a14; color: #f0c674; }
+  .box.r { background: #3a1a1a; color: #f8a0a0; }
+  .box.n { background: #1b212c; color: #c8d2e0; }
+  .calc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0 10px; }
+  .btn { padding: 7px 12px; background: #2a3340; color: #e3e8ee; font-size: 12.5px; }
+  .btn:hover { background: #343e4d; }
+  .btn.primary { background: #3b82f6; color: #fff; } .btn.primary:hover { background: #2f6fe0; }
+  .btn.danger:hover { background: #5a2323; color: #f8a0a0; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-xs { padding: 3px 8px; font-size: 11.5px; background: #232a36; color: #c8d2e0; margin-left: 4px; }
+  .btn-xs:hover { background: #2f3846; }
+  .btn-xs.danger:hover { color: #f87171; }
+  tr.clickable { cursor: pointer; }
+  tr.dim td { opacity: .55; }
+  .bar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: #232a36; margin: 6px 0; }
+  .bar span { display: block; height: 100%; }
+  .r-chip { display: inline-block; min-width: 46px; text-align: center; padding: 1px 6px; margin: 2px 3px 0 0;
+    border-radius: 6px; font-size: 11.5px; background: #1b212c; }
+  .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: none;
+    align-items: center; justify-content: center; z-index: 90; padding: 16px; }
+  .modal-mask.show { display: flex; }
+  .modal { background: #171c26; border: 1px solid #2a3340; border-radius: 12px; padding: 20px;
+    width: 100%; max-width: 560px; max-height: 92vh; overflow-y: auto; }
+  .modal h3 { font-size: 15px; margin-bottom: 14px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px; }
+  input[type=date] { color-scheme: dark; }
 </style>
 </head>
 <body>
@@ -122,6 +180,7 @@
     <div class="tabs">
       <button class="tab active" id="tabBT" onclick="switchTab('bt')">📊 策略回测</button>
       <button class="tab" id="tabPF" onclick="switchTab('pf')">💼 我的持仓</button>
+      <button class="tab" id="tabSW" onclick="switchTab('sw')">⚡ 短线</button>
     </div>
 
     <div id="viewBacktest">
@@ -167,7 +226,121 @@
         <div id="pfMetrics"><div class="empty">点上方「分析持仓」</div></div>
       </div>
     </div>
+
+    <div id="viewSwing" style="display:none">
+      <div class="sw-top">
+        <div class="disclaimer">📡 观察雷达：按视频（Martin Luk）方法扫描回调 / 突破 / EP 形态并做纸面跟踪。<b>日线回测无优势</b>（期望 −0.31R/笔，详见 docs/SWING_RESEARCH.md），形态只是"系统看到了什么"，不是买入信号；纸面满 100 笔且期望 R 显著 >0 之前不讨论实盘。计算器与交易日志是给你自己的单子用的工具。非投资建议。</div>
+        <button class="btn" id="swReloadBtn" onclick="loadSwing(true)">🔄 刷新</button>
+      </div>
+
+      <div class="sw-grid">
+        <div class="card">
+          <h2>🚦 交易环境 <span class="h-sub" id="swEnvAsof"></span></h2>
+          <div id="swEnv"><div class="empty">加载中…</div></div>
+          <div id="swOwn"></div>
+        </div>
+        <div class="card">
+          <h2>🧮 R 仓位计算器 <span class="h-sub">（只在浏览器里算，不上传）</span></h2>
+          <div class="calc-grid">
+            <div class="field"><label>账户金额 $</label><input id="cAcct" type="number" min="0" step="100" oninput="calc(true)"></div>
+            <div class="field"><label>单笔风险 %（打到止损亏多少）</label><input id="cRisk" type="number" min="0.05" max="5" step="0.05" oninput="calc(true)"></div>
+            <div class="field"><label>买入价</label><input id="cBuy" type="number" min="0" step="0.01" oninput="calc()"></div>
+            <div class="field"><label>止损价</label><input id="cStop" type="number" min="0" step="0.01" oninput="calc()"></div>
+            <div class="field"><label>ADR %（可选）</label><input id="cAdr" type="number" min="0" step="0.1" placeholder="止损≤ADR/2" oninput="calc()"></div>
+            <div class="field"><label>代码（可选）</label><input id="cTicker" placeholder="NVDA" oninput="calc()"></div>
+          </div>
+          <div id="cStreak"></div>
+          <div id="cOut"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>🎯 今日形态 <span class="h-sub" id="swSetupsSub"></span></h2>
+        <div id="swBtNote" class="muted small" style="margin:-4px 0 10px"></div>
+        <div id="swSetups"><div class="empty">加载中…</div></div>
+      </div>
+
+      <div class="sw-grid">
+        <div class="card">
+          <h2>👀 观察名单 <span class="h-sub">（刚涨完的强势股，等回调/收窄再看）</span></h2>
+          <div id="swWatch"><div class="empty">加载中…</div></div>
+        </div>
+        <div class="card">
+          <h2>📒 纸面实盘 <span class="h-sub">（按同一套规则自动跟踪，不是真钱）</span></h2>
+          <div id="swPaper"><div class="empty">加载中…</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 style="display:flex;align-items:center;gap:8px">📓 交易日志 <span class="h-sub">（个人数据，需访问令牌）</span>
+          <span style="flex:1"></span>
+          <button class="btn-xs" id="jnLogoutBtn" style="display:none" onclick="jnLogout()">退出</button></h2>
+        <div id="jnAuth">
+          <div class="pf-actions">
+            <div class="field" style="flex:1;min-width:220px"><label>访问令牌（只存在本浏览器）</label>
+              <input id="jnTokenInput" type="password" autocomplete="off" placeholder="输入令牌" onkeydown="if(event.key==='Enter')jnLogin()"></div>
+            <button class="btn primary" style="padding:9px 18px" onclick="jnLogin()">进入</button>
+          </div>
+          <div id="jnAuthMsg" class="muted small" style="margin-top:8px">令牌由服务器管理员生成（python journal.py set-token），只用于读写你自己的交易记录。</div>
+        </div>
+        <div id="jnBody" style="display:none">
+          <div id="jnStreak"></div>
+          <div id="jnStats" class="tiles" style="margin-top:12px"></div>
+          <div id="jnChart" style="width:100%;height:220px;margin-top:12px"></div>
+
+          <h2 style="margin-top:16px">＋ 记一笔 <span class="h-sub">（初始止损定义 1R，挪保本后别改它；分批卖出填加权均价）</span></h2>
+          <div class="calc-grid">
+            <div class="field"><label>代码</label><input id="jnCode" placeholder="NVDA"></div>
+            <div class="field"><label>形态</label><select id="jnSetup">
+              <option value="pullback">回调</option><option value="breakout">突破</option>
+              <option value="ep">EP</option><option value="other">其他</option></select></div>
+            <div class="field"><label>入场日期</label><input id="jnEntryDate" type="date"></div>
+            <div class="field"><label>入场价</label><input id="jnEntry" type="number" min="0" step="0.01"></div>
+            <div class="field"><label>初始止损价</label><input id="jnStop" type="number" min="0" step="0.01"></div>
+            <div class="field"><label>股数</label><input id="jnShares" type="number" min="0" step="1"></div>
+            <div class="field"><label>手续费 $（买+卖）</label><input id="jnFees" type="number" min="0" step="0.01" placeholder="0"></div>
+            <div class="field"><label>平仓日期（补录可填）</label><input id="jnExitDate" type="date"></div>
+            <div class="field"><label>平仓价（补录可填）</label><input id="jnExitPrice" type="number" min="0" step="0.01"></div>
+          </div>
+          <div class="pf-actions">
+            <div class="field" style="flex:1;min-width:220px"><label>备注</label><input id="jnNote" maxlength="500" placeholder="为什么买 / 哪里做错了"></div>
+            <button class="btn primary" style="padding:9px 18px" id="jnAddBtn" onclick="jnCreate()">保存</button>
+          </div>
+
+          <h2 style="margin-top:18px">进行中</h2>
+          <div id="jnOpen" class="tbl-wrap"></div>
+          <h2 style="margin-top:18px">已平仓</h2>
+          <div id="jnClosed" class="tbl-wrap"></div>
+        </div>
+      </div>
+    </div>
   </main>
+</div>
+<div class="modal-mask" id="jnModal" onclick="if(event.target===this)jnCloseModal()">
+  <div class="modal">
+    <h3 id="jnModalTitle">平仓</h3>
+    <div id="jnModalEdit" class="calc-grid">
+      <div class="field"><label>代码</label><input id="mCode"></div>
+      <div class="field"><label>形态</label><select id="mSetup">
+        <option value="">（未填）</option><option value="pullback">回调</option><option value="breakout">突破</option>
+        <option value="ep">EP</option><option value="other">其他</option></select></div>
+      <div class="field"><label>入场日期</label><input id="mEntryDate" type="date"></div>
+      <div class="field"><label>入场价</label><input id="mEntry" type="number" min="0" step="0.01" oninput="jnModalPreview()"></div>
+      <div class="field"><label>初始止损价</label><input id="mStop" type="number" min="0" step="0.01" oninput="jnModalPreview()"></div>
+      <div class="field"><label>股数</label><input id="mShares" type="number" min="0" step="1" oninput="jnModalPreview()"></div>
+    </div>
+    <div class="calc-grid">
+      <div class="field"><label>平仓日期</label><input id="mExitDate" type="date"></div>
+      <div class="field"><label>平仓价（加权均价）</label><input id="mExitPrice" type="number" min="0" step="0.01" oninput="jnModalPreview()"></div>
+      <div class="field"><label>手续费 $（买+卖）</label><input id="mFees" type="number" min="0" step="0.01" oninput="jnModalPreview()"></div>
+    </div>
+    <div class="field" id="jnModalNoteWrap"><label>备注</label><input id="mNote" maxlength="500"></div>
+    <div id="jnModalPreview" class="muted small"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="jnCloseModal()">取消</button>
+      <button class="btn primary" id="jnModalSave" onclick="jnModalSubmit()">保存</button>
+    </div>
+  </div>
 </div>
 <div id="toast" class="toast"></div>
 
@@ -352,16 +525,26 @@ function esc(s){ return String(s).replace(/[<>&]/g, c=>({'<':'&lt;','>':'&gt;','
 // ===== 我的持仓 =====
 let pfChart, pfHeat;
 
+const TAB_VIEWS = {bt: ['tabBT', 'viewBacktest'], pf: ['tabPF', 'viewPortfolio'], sw: ['tabSW', 'viewSwing']};
+const TAB_HASH = {bt: '', pf: '#portfolio', sw: '#swing'};
+let swLoaded = false;
+
 function switchTab(which) {
+  if (!TAB_VIEWS[which]) which = 'bt';
+  Object.keys(TAB_VIEWS).forEach(k => {
+    document.getElementById(TAB_VIEWS[k][0]).classList.toggle('active', k === which);
+    document.getElementById(TAB_VIEWS[k][1]).style.display = k === which ? 'block' : 'none';
+  });
   const bt = which === 'bt';
-  document.getElementById('tabBT').classList.toggle('active', bt);
-  document.getElementById('tabPF').classList.toggle('active', !bt);
-  document.getElementById('viewBacktest').style.display = bt ? 'block' : 'none';
-  document.getElementById('viewPortfolio').style.display = bt ? 'none' : 'block';
-  // 持仓视图隐藏回测侧边栏，主区占满
+  // 持仓 / 短线视图隐藏回测侧边栏，主区占满
   document.querySelector('.sidebar').style.display = bt ? 'block' : 'none';
   document.querySelector('.app').style.gridTemplateColumns = bt ? '300px 1fr' : '1fr';
-  if (!bt) setTimeout(() => { pfChart && pfChart.resize(); pfHeat && pfHeat.resize(); }, 50);
+  try { history.replaceState(null, '', location.pathname + location.search + TAB_HASH[which]); } catch(e) {}
+  if (which === 'pf') setTimeout(() => { pfChart && pfChart.resize(); pfHeat && pfHeat.resize(); }, 50);
+  if (which === 'sw') {
+    if (!swLoaded) { swLoaded = true; loadSwing(false); }
+    setTimeout(() => { jnChart && jnChart.resize(); }, 50);
+  }
 }
 
 async function loadPortfolioDefaults() {
@@ -468,8 +651,533 @@ function renderPfMetrics(r) {
   document.getElementById('pfMetrics').innerHTML = html + '</tbody></table>';
 }
 
-window.addEventListener('resize', () => { chart && chart.resize(); pfChart && pfChart.resize(); pfHeat && pfHeat.resize(); });
+// ===================== ⚡ 短线 =====================
+// 数据：/api/swing/config（参数白名单）、/api/swing/snapshot（环境+形态+观察名单）、
+//       /api/swing/paper（纸面实盘）、/api/journal（个人交易日志，需 X-Journal-Token）。
+// 扫描结果字段由 core 模块产出，这里一律容错渲染（缺字段显示 -，百分比自动识别小数/百分数）。
+let jnChart = null, SW_SETUPS = [], CALC_LAST = null, calcInited = false;
+const SWCFG = {account_size: 10000, risk_pct: 0.005, max_position_pct: 0.25,
+               max_stop_pct: 0.03, hard_stop_cap: 0.05, backtest_note: ''};
+const JN = {token: '', trades: [], stats: null, streak: null};
+let JN_MODAL = {mode: null, id: null};
+const SETUP_CN = {pullback: '回调', breakout: '突破', ep: 'EP', other: '其他'};
+const TIER_CN = {strong: '强', medium: '中', weak: '弱'};
+const VERDICT = {go: ['#4ade80', '适合出手'], selective: ['#f0c674', '精选少做'], stop: ['#f87171', '休息观望']};
+const SRC_CN = {gainer: '当日涨幅榜', rs: '60日强势(补充)', carry: '名单保留',
+  em60: '60日强势(补充)', cold_start: '冷启动', manual: '手动'};
+
+function h(s) { return String(s == null ? '' : s).replace(/[&<>"']/g,
+  c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c])); }
+function isNum(v) { return v !== null && v !== undefined && v !== '' && typeof v !== 'boolean' && isFinite(+v); }
+function fx(v, d) { return isNum(v) ? (+v).toFixed(d == null ? 2 : d) : '-'; }
+function money(v) { if (!isNum(v)) return '-'; v = +v; const a = Math.abs(v);   // 小额保留分，大额取整
+  return (v < 0 ? '-$' : '$') + (a < 100 ? a.toFixed(2) : Math.round(a).toLocaleString('en-US')); }
+function pctF(v, d) { return isNum(v) ? (+v * 100).toFixed(d == null ? 1 : d) + '%' : '-'; }  // 0.034 → 3.4%
+// 字段可能是小数(0.034)也可能已是百分数(3.4)：|v|≤1.5 视为小数
+function asFrac(v) { if (!isNum(v)) return null; v = +v; return Math.abs(v) <= 1.5 ? v : v / 100; }
+function pctAuto(v, d) { const f = asFrac(v); return f == null ? '-' : pctF(f, d); }
+function rTxt(v) { return isNum(v) ? (+v > 0 ? '+' : '') + (+v).toFixed(2) + 'R' : '-'; }
+function rCls(v) { return !isNum(v) ? '' : (+v > 0.05 ? 'pos' : (+v < -0.05 ? 'neg' : 'muted')); }
+function pick(o, keys) { for (const k of keys) if (o && o[k] !== undefined && o[k] !== null && o[k] !== '') return o[k]; return null; }
+function fmtShares(v) { return !isNum(v) ? '-' : (Number.isInteger(+v) ? String(+v) : (+v).toFixed(4)); }
+function todayStr() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')
+  + '-' + String(d.getDate()).padStart(2, '0'); }
+function lsGet(k) { try { return localStorage.getItem(k); } catch(e) { return null; } }
+function lsSet(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch(e) {} }
+function nv(id) { const s = val(id).trim(); return s === '' ? null : Number(s); }
+function sv(id) { const s = val(id).trim(); return s === '' ? null : s; }
+function setVal(id, v) { document.getElementById(id).value = (v == null ? '' : v); }
+function setupPill(key, cn) { const k = SETUP_CN[key] ? key : 'other';
+  return `<span class="pill ${k}">${h(cn || SETUP_CN[key] || key || '-')}</span>`; }
+function tierPill(t) { return TIER_CN[t] ? `<span class="pill ${t}">${TIER_CN[t]}</span>` : '<span class="muted">-</span>'; }
+function emptyBox(msg) { return `<div class="empty">${h(msg)}</div>`; }
+function yes(b) { return b ? '<span class="pos">✓</span>' : '<span class="neg">✗</span>'; }
+// v 必须是已格式化的安全文本（数字/格式化结果），不要传入用户数据
+function tile(k, v, cls, sub) { return `<div class="tile"><div class="k">${h(k)}</div><div class="v ${cls || ''}">${v}</div>`
+  + (sub ? `<div class="s">${sub}</div>` : '') + '</div>'; }
+
+async function loadSwing(manual) {
+  const btn = document.getElementById('swReloadBtn');
+  btn.disabled = true;
+  try {
+    try { Object.assign(SWCFG, await api('/api/swing/config')); } catch(e) {}
+    initCalc();
+    const fail = e => ({data: null, message: '加载失败：' + e.message});
+    const [snap, paper] = await Promise.all([api('/api/swing/snapshot').catch(fail), api('/api/swing/paper').catch(fail)]);
+    renderEnv(snap.data, snap.message);
+    renderSetups(snap.data, snap.message);
+    renderWatch(snap.data, snap.message);
+    renderPaper(paper.data || (snap.data && snap.data.paper) || null, paper.message);
+    if (!JN.token) JN.token = lsGet('journalToken') || '';
+    await jnLoad(false);
+    if (manual) toast('已刷新');
+  } finally { btn.disabled = false; }
+}
+
+// ---------- 交易环境 ----------
+function renderEnv(snap, msg) {
+  const el = document.getElementById('swEnv');
+  const env = snap && snap.env;
+  const asof = (env && env.asof) || (snap && snap.asof);
+  document.getElementById('swEnvAsof').textContent = asof ? '截至 ' + asof : '';
+  if (!env) { el.innerHTML = emptyBox(msg || '暂无交易环境数据（每日扫描后生成）'); renderOwn(); return; }
+  const vd = VERDICT[env.verdict] || ['#9aa7ba', env.verdict || '-'];
+  let html = `<div class="verdict" style="color:${vd[0]}">${h(env.emoji || '')} ${h(env.label || vd[1])}</div>`;
+  const reasons = Array.isArray(env.reasons) ? env.reasons : [];
+  if (reasons.length) html += '<ul class="reasons">' + reasons.map(r => `<li>${h(r)}</li>`).join('') + '</ul>';
+  if (env.extended) html += '<div class="box y">指数连涨几周没有像样的回调：别大量开新仓，已有仓位按 9EMA 跟踪。</div>';
+
+  const idx = env.index || {}, keys = Object.keys(idx);
+  if (keys.length) {
+    html += '<div class="tbl-wrap" style="margin-top:12px"><table><thead><tr><th>指数</th><th>收盘</th><th>9EMA</th><th>21EMA</th>'
+      + '<th>站上9 / 9向上</th><th>站上21 / 21向上</th><th>距21EMA</th><th>连续站上21</th><th>出手窗口</th></tr></thead><tbody>';
+    keys.forEach(k => {
+      const x = idx[k] || {};
+      const win = (x.above9 && x.above21 && x.rising9 && x.rising21) ? '<span class="pos">🟢 打开</span>'
+        : (x.above21 && x.rising21) ? '<span style="color:#f0c674">🟡 一般</span>' : '<span class="neg">🔴 关闭</span>';
+      const d21 = (isNum(x.close) && isNum(x.ema21) && +x.ema21 > 0) ? x.close / x.ema21 - 1 : null;
+      html += `<tr><td class="name-cell">${h(k)}</td><td>${fx(x.close)}</td><td>${fx(x.ema9)}</td><td>${fx(x.ema21)}</td>
+        <td>${yes(x.above9)} / ${yes(x.rising9)}</td><td>${yes(x.above21)} / ${yes(x.rising21)}</td>
+        <td class="${d21 > 0 ? 'pos' : d21 < 0 ? 'neg' : ''}">${d21 == null ? '-' : (d21 > 0 ? '+' : '') + pctF(d21)}</td>
+        <td>${isNum(x.days_above21) ? (+x.days_above21) + ' 天' : '-'}</td><td>${win}</td></tr>`;
+    });
+    html += '</tbody></table></div><div class="small muted" style="margin-top:4px">QQQ 和 IWM 都站上向上的 9EMA 与 21EMA 时最适合出手。</div>';
+  }
+
+  const b = env.breadth;
+  if (b) {
+    const tot = +b.total || 0, s = +b.strong || 0, m = +b.medium || 0, w = +b.weak || 0;
+    const sp = tot > 0 ? s / tot : asFrac(b.strong_pct), prev = asFrac(b.strong_pct_prev);
+    const arrow = (prev == null || sp == null) ? '' : (sp > prev + 0.005 ? ' <span class="pos">↑</span>'
+      : sp < prev - 0.005 ? ' <span class="neg">↓ 强档变少</span>' : ' →');
+    html += `<div style="margin-top:14px"><div class="small muted">观察池宽度（强 = 价&gt;50EMA 且 50EMA&gt;150EMA）${b.source ? ' · 来源 ' + h(b.source) : ''}</div>`;
+    if (tot > 0) html += `<div class="bar"><span style="width:${s / tot * 100}%;background:#4ade80"></span>`
+      + `<span style="width:${m / tot * 100}%;background:#3b82f6"></span><span style="width:${w / tot * 100}%;background:#f87171"></span></div>`;
+    html += `<div class="small">${tot > 0 ? `强 ${s} · 中 ${m} · 弱 ${w}（共 ${tot}）· ` : ''}强档占比 <b>${sp == null ? '-' : pctF(sp)}</b>`
+      + `${prev != null ? '（前值 ' + pctF(prev) + '）' : ''}${arrow}</div></div>`;
+  }
+  el.innerHTML = html;
+  renderOwn();
+}
+
+function streakBox(s) {
+  const cls = s.pause ? 'r' : (s.risk_mult < 1 ? 'y' : (s.consecutive_losses > 0 ? 'n' : 'g'));
+  const head = s.pause ? '⛔ 暂停开新仓' : s.risk_mult < 1 ? '⚠️ 风险减半' : (s.consecutive_losses > 0 ? '留意' : '✅ 正常');
+  const chips = (s.recent_r || []).map(r => `<span class="r-chip ${rCls(r)}">${rTxt(r)}</span>`).join('');
+  return `<div class="box ${cls}"><b>我的单子：${head}</b> · 当前连亏 ${+s.consecutive_losses || 0} 笔 · 风险系数 ×${fx(s.risk_mult, 1)}`
+    + `<br>${h(s.note || '')}` + (chips ? `<div style="margin-top:4px"><span class="small">最近 R：</span>${chips}</div>` : '') + '</div>';
+}
+
+function renderOwn() {
+  const el = document.getElementById('swOwn');
+  if (JN.token && JN.streak) { el.innerHTML = streakBox(JN.streak); return; }
+  el.innerHTML = '<div class="box n small">三看之一「自己的单子」：在下方交易日志输入令牌后显示连亏状态（个人数据不放在公开接口里）。</div>';
+}
+
+// ---------- 今日形态 ----------
+function renderSetups(snap, msg) {
+  const el = document.getElementById('swSetups');
+  document.getElementById('swBtNote').textContent = SWCFG.backtest_note ? '回测：' + SWCFG.backtest_note : '';
+  const list = (snap && Array.isArray(snap.setups)) ? snap.setups : [];
+  SW_SETUPS = list;
+  document.getElementById('swSetupsSub').textContent = snap
+    ? `（${snap.asof ? snap.asof + ' 收盘判定 · ' : ''}触发 = 次日价格突破该价买入 · 止损 = 当日低点 · 点一行带入计算器）` : '';
+  if (!snap) { el.innerHTML = emptyBox(msg || '暂无扫描结果'); return; }
+  if (!list.length) { el.innerHTML = emptyBox('今日没有符合规则的形态。只做止损能放得很近的位置——没有就空仓等待，这本身就是策略的一部分。'); return; }
+  const maxStop = +SWCFG.max_stop_pct || 0.03;
+  let html = '<div class="tbl-wrap"><table><thead><tr><th>名称</th><th>形态</th><th>收盘</th><th>触发</th><th>止损</th><th>止损%</th>'
+    + '<th>ADR</th><th>质量</th><th>强弱</th></tr></thead><tbody>';
+  list.forEach((s, i) => {
+    const sp = (isNum(s.trigger) && isNum(s.stop) && +s.trigger > 0) ? (s.trigger - s.stop) / s.trigger : asFrac(s.stop_pct);
+    const bad = s.ok_stop === false;
+    html += `<tr class="clickable${bad ? ' dim' : ''}" onclick="useSetup(${i})">
+      <td class="tl"><span class="name-cell">${h(s.ticker || '-')}</span> <span class="muted">${h(s.name || '')}</span>`
+      + (s.note ? `<div class="small muted" style="white-space:normal;min-width:180px;max-width:300px">${h(s.note)}</div>` : '') + `</td>
+      <td>${setupPill(s.setup, s.setup_cn)}${bad ? ' <span class="pill weak">止损过宽</span>' : ''}</td>
+      <td>${fx(s.close)}</td><td style="color:#93c5fd">${fx(s.trigger)}</td><td class="neg">${fx(s.stop)}</td>
+      <td style="${sp != null && sp > maxStop ? 'color:#f0c674' : ''}">${sp == null ? '-' : pctF(sp, 2)}</td>
+      <td>${pctAuto(s.adr_pct)}</td><td>${isNum(s.quality) ? Math.round(+s.quality) : '-'}</td><td>${tierPill(s.tier)}</td></tr>`;
+  });
+  html += `</tbody></table></div><div class="small muted" style="margin-top:8px">雷达只列形态、不给仓位（回测无优势）。`
+    + `想按自己的入场和止损算股数，点行带入右侧计算器。</div>`;
+  el.innerHTML = html;
+}
+
+function useSetup(i) {
+  const s = SW_SETUPS[i]; if (!s) return;
+  setVal('cBuy', isNum(s.trigger) ? +s.trigger : '');
+  setVal('cStop', isNum(s.stop) ? +s.stop : '');
+  const adr = asFrac(s.adr_pct);
+  setVal('cAdr', adr == null ? '' : +(adr * 100).toFixed(2));
+  setVal('cTicker', s.ticker || '');
+  calc();
+  document.getElementById('cBuy').scrollIntoView({behavior: 'smooth', block: 'center'});
+  toast(`已带入 ${s.ticker}：触发 ${fx(s.trigger)} / 止损 ${fx(s.stop)}`);
+}
+
+// ---------- 观察名单 ----------
+function renderWatch(snap, msg) {
+  const el = document.getElementById('swWatch');
+  if (!snap) { el.innerHTML = emptyBox(msg || '暂无观察名单'); return; }
+  const list = Array.isArray(snap.watchlist) ? snap.watchlist : [];
+  if (!list.length) { el.innerHTML = emptyBox('观察名单为空'); return; }
+  let html = '<div class="tbl-wrap"><table><thead><tr><th>代码</th><th class="tl">名称</th><th class="tl">来源</th><th>强弱</th><th>加入日期</th></tr></thead><tbody>';
+  list.forEach(w => {
+    const src = pick(w, ['source', 'src']);
+    const flags = (w.stale ? ' <span class="pill weak">行情过期</span>' : '')
+      + (w.eligible === false ? ' <span class="pill other">资格不符</span>' : '');
+    const days = isNum(w.days_in) ? `<span class="muted small"> · 第 ${+w.days_in} 天</span>` : '';
+    html += `<tr><td class="name-cell">${h(pick(w, ['ticker', 'ts_code']) || '-')}</td><td class="tl">${h(w.name || '')}${flags}</td>
+      <td class="tl muted">${h(SRC_CN[src] || src || '-')}</td><td>${tierPill(w.tier)}</td>
+      <td>${h(pick(w, ['added_date', 'added']) || '-')}${days}</td></tr>`;
+  });
+  el.innerHTML = html + `</tbody></table></div><div class="small muted" style="margin-top:8px">共 ${list.length} 只</div>`;
+}
+
+// ---------- 纸面实盘 ----------
+function renderPaper(p, msg) {
+  const el = document.getElementById('swPaper');
+  if (!p) { el.innerHTML = emptyBox(msg || '纸面实盘还没有记录'); return; }
+  let html = '<div class="tiles">' + tile('已平仓', isNum(p.n_closed) ? (+p.n_closed) + ' 笔' : '-', '',
+      isNum(p.n_open) ? `持有 ${+p.n_open} · 待触发 ${+p.n_pending || 0}` : '')
+    + tile('胜率', pctAuto(p.win_rate, 0)) + tile('平均盈利', rTxt(p.avg_win_r), 'pos') + tile('平均亏损', rTxt(p.avg_loss_r), 'neg')
+    + tile('期望/笔', rTxt(p.expectancy_r), rCls(p.expectancy_r)) + tile('总计', rTxt(p.total_r), rCls(p.total_r)) + '</div>';
+  // open 里含 pending（信号已发、次日待触发）与 open（已成交，r_multiple 为按最新收盘的浮动 R）
+  const open = Array.isArray(p.open) ? p.open : [];
+  html += `<h2 style="margin-top:14px">进行中 / 待触发 <span class="h-sub">${open.length} 笔</span></h2>`;
+  if (open.length) {
+    html += '<div class="tbl-wrap"><table><thead><tr><th>代码</th><th>形态</th><th>状态</th><th>日期</th><th>成交/触发</th>'
+      + '<th>当前止损</th><th>浮动</th><th class="tl">备注</th></tr></thead><tbody>';
+    open.forEach(o => {
+      const pending = o.status === 'pending';
+      const r = pending ? null : pick(o, ['r_multiple', 'r']);
+      html += `<tr><td class="name-cell">${h(pick(o, ['ticker', 'ts_code']) || '-')}</td><td>${setupPill(o.setup, o.setup_cn)}</td>
+        <td>${pending ? '<span class="pill other">待触发</span>' : '<span class="pill pullback">持有</span>'}</td>
+        <td>${h((pending ? o.signal_date : pick(o, ['entry_date', 'signal_date'])) || '-')}</td>
+        <td>${fx(pending ? o.trigger : pick(o, ['entry_price', 'trigger']))}</td>
+        <td class="neg">${fx(pick(o, ['stop_now', 'stop']))}</td><td class="${rCls(r)}">${pending ? '-' : rTxt(r)}</td>
+        <td class="tl muted" style="white-space:normal;min-width:100px">${h(o.note || '')}</td></tr>`;
+    });
+    html += '</tbody></table></div>';
+  } else html += '<div class="muted small">无</div>';
+  const rec = Array.isArray(p.recent) ? p.recent.slice(0, 15) : [];
+  if (rec.length) {
+    html += '<h2 style="margin-top:14px">最近平仓</h2><div class="tbl-wrap"><table><thead><tr><th>代码</th><th>形态</th>'
+      + '<th>入场 → 平仓</th><th>R</th><th class="tl">离场原因</th></tr></thead><tbody>';
+    rec.forEach(o => {
+      const r = pick(o, ['r_multiple', 'r']);
+      html += `<tr><td class="name-cell">${h(pick(o, ['ticker', 'ts_code']) || '-')}</td><td>${setupPill(o.setup, o.setup_cn)}</td>
+        <td>${h(o.entry_date || '-')} → ${h(o.exit_date || '-')}</td><td class="${rCls(r)}">${rTxt(r)}</td>
+        <td class="tl muted">${h(pick(o, ['note', 'exit_reason']) || '')}</td></tr>`;
+    });
+    html += '</tbody></table></div>';
+  }
+  el.innerHTML = html;
+}
+
+// ---------- R 仓位计算器 ----------
+function initCalc() {
+  if (!calcInited) {
+    calcInited = true;
+    const a = lsGet('sw_account'), r = lsGet('sw_risk_pct');
+    setVal('cAcct', isNum(a) && +a > 0 ? +a : SWCFG.account_size);
+    setVal('cRisk', isNum(r) && +r > 0 ? +r : +(SWCFG.risk_pct * 100).toFixed(3));
+  }
+  calc();
+}
+
+function renderCalcStreak() {
+  const el = document.getElementById('cStreak'), s = JN.token ? JN.streak : null;
+  if (!s || !(s.pause || s.risk_mult < 1)) { el.innerHTML = ''; return; }
+  const sug = +((+SWCFG.risk_pct || 0.005) * 100 * (+s.risk_mult || 0.5)).toFixed(3);
+  el.innerHTML = s.pause
+    ? `<div class="box r">⛔ 连亏 ${+s.consecutive_losses} 笔，熔断暂停中：${h(s.note || '')}</div>`
+    : `<div class="box y">⚠️ 连亏 ${+s.consecutive_losses} 笔：建议单笔风险减半 → ${sug}%（以默认 ${pctF(SWCFG.risk_pct, 2)} 为基准）`
+      + ` <button class="btn-xs" onclick="applyRisk(${sug})">套用</button></div>`;
+}
+function applyRisk(v) { setVal('cRisk', v); calc(true); }
+
+function calc(save) {
+  if (save) { lsSet('sw_account', val('cAcct')); lsSet('sw_risk_pct', val('cRisk')); }
+  renderCalcStreak();
+  CALC_LAST = null;
+  const acct = +val('cAcct'), riskPct = +val('cRisk'), buy = +val('cBuy'), stop = +val('cStop'), adr = +val('cAdr');
+  const out = document.getElementById('cOut');
+  if (!(acct > 0) || !(riskPct > 0)) { out.innerHTML = '<div class="box y">请填写账户金额和单笔风险 %</div>'; return; }
+  const riskAmt = acct * riskPct / 100;
+  if (!(buy > 0) || !(stop > 0)) {
+    out.innerHTML = `<div class="box n">每笔风险 ${money(riskAmt)}（账户的 ${fx(riskPct, 2)}%）。填入买入价和止损价，或点「今日形态」的一行带入。</div>`;
+    return;
+  }
+  if (stop >= buy) { out.innerHTML = '<div class="box r">止损价必须低于买入价（做多）</div>'; return; }
+  const dist = buy - stop, sp = dist / buy;
+  const maxPos = +SWCFG.max_position_pct || 0.25, maxStop = +SWCFG.max_stop_pct || 0.03, hard = +SWCFG.hard_stop_cap || 0.05;
+  const rawShares = Math.floor(riskAmt / dist), maxVal = acct * maxPos;
+  let shares = rawShares, truncated = false;
+  if (shares * buy > maxVal) { shares = Math.floor(maxVal / buy); truncated = true; }
+  const value = shares * buy, r1 = shares * dist;
+  const warns = [];
+  if (sp > hard) warns.push(['r', `止损距离 ${pctF(sp, 2)} > ${pctF(hard, 0)}：不建议做。只做止损能放得很近的位置，找更近的支撑或放弃。`]);
+  else if (sp > maxStop) warns.push(['y', `止损距离 ${pctF(sp, 2)} > ${pctF(maxStop, 0)}：超出常规上限，实际超过 3% 一般不做。`]);
+  if (adr > 0 && sp > adr / 200) warns.push(['y', `止损超过 ADR/2（${fx(adr / 2, 2)}%）：相对这只票的日波动太宽。`]);
+  if (truncated) warns.push(['y', `按风险需 ${rawShares} 股（${money(rawShares * buy)}，占账户 ${pctF(rawShares * buy / acct)}），`
+    + `超过单仓上限 ${pctF(maxPos, 0)}，已截断为 ${shares} 股：实际 1R = ${money(r1)}，小于计划的 ${money(riskAmt)}。`]);
+  if (shares < 1) warns.push(['r', '按当前账户和风险，连 1 股都买不了。']);
+  let html = '<div class="tiles" style="margin-top:6px">' + tile('建议股数', shares + ' 股') + tile('仓位市值', money(value))
+    + tile('占账户', pctF(value / acct)) + tile('1R 金额', money(r1), 'neg', '打到止损亏这么多')
+    + tile('止损距离', pctF(sp, 2), sp > hard ? 'neg' : (sp > maxStop ? '' : 'pos')) + '</div>';
+  html += warns.map(w => `<div class="box ${w[0]}">${w[1]}</div>`).join('');
+  html += '<div class="tbl-wrap" style="margin-top:10px"><table><thead><tr><th>目标</th><th>价格</th><th>涨幅</th><th>盈利</th></tr></thead><tbody>'
+    + [2, 5, 10, 15].map(k => `<tr><td class="name-cell">${k}R</td><td>${fx(buy + k * dist)}</td><td class="pos">+${pctF(k * sp)}</td>`
+      + `<td class="pos">${money(k * r1)}</td></tr>`).join('') + '</tbody></table></div>';
+  html += '<div class="small muted" style="margin-top:8px">管理：持有满 3 天且 9EMA 升到成本上方 → 止损挪到成本；比 9EMA 高 15-20% 先卖约 15%；收盘跌破 9EMA 全部卖出。</div>';
+  if (shares >= 1) {
+    CALC_LAST = {buy, stop, shares, ticker: val('cTicker').trim().toUpperCase()};
+    html += '<div style="margin-top:10px"><button class="btn" onclick="calcToJournal()">→ 记入交易日志</button></div>';
+  }
+  out.innerHTML = html;
+}
+
+function calcToJournal() {
+  if (!CALC_LAST) return;
+  if (!JN.token) { toast('先在交易日志输入访问令牌', true); document.getElementById('jnTokenInput').focus(); return; }
+  setVal('jnCode', CALC_LAST.ticker); setVal('jnEntry', CALC_LAST.buy); setVal('jnStop', CALC_LAST.stop);
+  setVal('jnShares', CALC_LAST.shares);
+  if (!val('jnEntryDate')) setVal('jnEntryDate', todayStr());
+  const s = SW_SETUPS.find(x => x.ticker === CALC_LAST.ticker);
+  if (s && SETUP_CN[s.setup]) setVal('jnSetup', s.setup);
+  document.getElementById('jnCode').scrollIntoView({behavior: 'smooth', block: 'center'});
+  toast('已填入记账表单，成交后按实际成交价修改再保存');
+}
+
+// ---------- 交易日志 ----------
+async function jnApi(path, opts) {
+  opts = opts || {};
+  opts.headers = Object.assign({'X-Journal-Token': JN.token}, opts.headers || {});
+  const r = await fetch(path, opts);
+  let body = null;
+  try { body = await r.json(); } catch(e) {}
+  if (!r.ok) {
+    const d = body && body.detail;
+    const err = new Error(typeof d === 'string' ? d : (d ? '输入格式不正确' : r.statusText));
+    err.status = r.status;
+    if (r.status === 401) { JN.token = ''; lsSet('journalToken', null); }
+    throw err;
+  }
+  return body;
+}
+
+function jnShowAuth(msg, isErr) {
+  // 退出/令牌失效时把已渲染的个人数据从 DOM 里清掉（不只是隐藏）
+  ['jnStreak', 'jnStats', 'jnOpen', 'jnClosed'].forEach(id => { document.getElementById(id).innerHTML = ''; });
+  if (jnChart) { jnChart.dispose(); jnChart = null; }
+  document.getElementById('jnAuth').style.display = 'block';
+  document.getElementById('jnBody').style.display = 'none';
+  document.getElementById('jnLogoutBtn').style.display = 'none';
+  const m = document.getElementById('jnAuthMsg');
+  m.textContent = msg || '令牌由服务器管理员生成（python journal.py set-token），只用于读写你自己的交易记录。';
+  m.style.color = isErr ? '#f0c674' : '';
+}
+function jnShowBody() {
+  document.getElementById('jnAuth').style.display = 'none';
+  document.getElementById('jnBody').style.display = 'block';
+  document.getElementById('jnLogoutBtn').style.display = 'inline-block';
+}
+
+async function jnLogin() {
+  const t = val('jnTokenInput').trim();
+  if (!t) { toast('请输入访问令牌', true); return; }
+  JN.token = t;
+  await jnLoad(true);
+}
+
+async function jnLoad(fromLogin) {
+  if (!JN.token) { jnShowAuth(); renderOwn(); renderCalcStreak(); return; }
+  try {
+    const d = await jnApi('/api/journal');
+    if (fromLogin) { lsSet('journalToken', JN.token); toast('已进入交易日志'); }
+    JN.trades = d.trades || []; JN.stats = d.stats || null; JN.streak = d.streak || null;
+    setVal('jnTokenInput', '');
+    jnShowBody(); renderJournal();
+  } catch(e) {
+    JN.trades = []; JN.stats = null; JN.streak = null;
+    const msg = e.status === 401 ? '访问令牌错误，请重新输入' : (e.status === 503 ? e.message : '加载失败：' + e.message);
+    jnShowAuth(msg, true);
+    if (fromLogin) toast(msg, true);
+  }
+  renderOwn(); renderCalcStreak();
+}
+
+function jnLogout() {
+  JN.token = ''; JN.trades = []; JN.stats = null; JN.streak = null;
+  lsSet('journalToken', null);
+  jnShowAuth(); renderOwn(); renderCalcStreak();
+  toast('已退出交易日志（本浏览器不再保存令牌）');
+}
+
+function jnActions(t) {
+  const id = +t.id;
+  return (t.status === 'closed' ? '' : `<button class="btn-xs" onclick="jnOpenModal('close', ${id})">平仓</button>`)
+    + `<button class="btn-xs" onclick="jnOpenModal('edit', ${id})">编辑</button>`
+    + `<button class="btn-xs danger" onclick="jnDelete(${id})">删除</button>`;
+}
+function jnName(t) { return `<span class="name-cell">${h(t.ts_code)}</span> <span class="muted">${h(t.name || '')}</span>`; }
+function jnNote(t) { return `<td class="tl muted" style="white-space:normal;min-width:120px;max-width:260px">${h(t.note || '')}</td>`; }
+
+function renderJournal() {
+  const st = JN.stats || {}, s = JN.streak;
+  document.getElementById('jnStreak').innerHTML = s ? streakBox(s) : '';
+  const cl = +st.consecutive_losses || 0;
+  document.getElementById('jnStats').innerHTML =
+    tile('已平仓', (+st.n_closed || 0) + ' 笔', '', `进行中 ${+st.n_open || 0} 笔`)
+    + tile('胜率', st.win_rate == null ? '-' : pctF(st.win_rate, 0), '', `赢 ${+st.n_win || 0} · 亏 ${+st.n_loss || 0} · 保本 ${+st.n_scratch || 0}`)
+    + tile('平均盈利', rTxt(st.avg_win_r), 'pos') + tile('平均亏损', rTxt(st.avg_loss_r), 'neg')
+    + tile('盈亏比', st.payoff == null ? '-' : fx(st.payoff, 2), '', '平均盈利R/平均亏损R')
+    + tile('期望/笔', rTxt(st.expectancy_r), rCls(st.expectancy_r))
+    + tile('总计', rTxt(st.total_r), rCls(st.total_r), isNum(st.total_pnl) ? money(st.total_pnl) : '')
+    + tile('R 最大回撤', isNum(st.max_drawdown_r) && +st.max_drawdown_r > 0 ? '-' + fx(st.max_drawdown_r) + 'R' : '0R', 'neg')
+    + tile('当前连亏', cl + ' 笔', cl >= 3 ? 'neg' : '',
+        s && s.pause ? '⛔ 熔断：暂停开新仓' : (s && s.risk_mult < 1 ? '⚠️ 熔断：风险减半' : `最长连亏 ${+st.max_consec_losses || 0} 笔`));
+  renderJnChart(st.equity_curve_r || []);
+
+  const open = JN.trades.filter(t => t.status !== 'closed');
+  const closed = JN.trades.filter(t => t.status === 'closed')
+    .sort((a, b) => String(b.exit_date || '').localeCompare(String(a.exit_date || '')) || (b.id - a.id));
+  document.getElementById('jnOpen').innerHTML = !open.length ? emptyBox('没有进行中的交易')
+    : '<table><thead><tr><th>代码</th><th>形态</th><th>入场日</th><th>入场价</th><th>初始止损</th><th>止损%</th><th>股数</th>'
+      + '<th>仓位</th><th>1R</th><th class="tl">备注</th><th></th></tr></thead><tbody>'
+      + open.map(t => `<tr><td class="tl">${jnName(t)}</td><td>${t.setup ? setupPill(t.setup, t.setup_cn) : '-'}</td>
+        <td>${h(t.entry_date)}</td><td>${fx(t.entry_price)}</td><td class="neg">${fx(t.stop_price)}</td>
+        <td style="${+t.stop_pct > (+SWCFG.max_stop_pct || 0.03) ? 'color:#f0c674' : ''}">${pctF(t.stop_pct, 2)}</td>
+        <td>${fmtShares(t.shares)}</td><td>${money(t.position_value)}</td><td class="neg">${money(t.risk_value)}</td>
+        ${jnNote(t)}<td>${jnActions(t)}</td></tr>`).join('') + '</tbody></table>';
+  document.getElementById('jnClosed').innerHTML = !closed.length ? emptyBox('还没有已平仓的交易')
+    : '<table><thead><tr><th>代码</th><th>形态</th><th>入场 → 平仓</th><th>天数</th><th>入场价</th><th>平仓价</th><th>股数</th>'
+      + '<th>盈亏</th><th>R</th><th class="tl">备注</th><th></th></tr></thead><tbody>'
+      + closed.map(t => `<tr><td class="tl">${jnName(t)}</td><td>${t.setup ? setupPill(t.setup, t.setup_cn) : '-'}</td>
+        <td>${h(t.entry_date)} → ${h(t.exit_date)}</td><td>${isNum(t.hold_days) ? +t.hold_days : '-'}</td>
+        <td>${fx(t.entry_price)}</td><td>${fx(t.exit_price)}</td><td>${fmtShares(t.shares)}</td>
+        <td class="${+t.pnl > 0 ? 'pos' : +t.pnl < 0 ? 'neg' : ''}">${money(t.pnl)}</td><td class="${rCls(t.r)}"><b>${rTxt(t.r)}</b></td>
+        ${jnNote(t)}<td>${jnActions(t)}</td></tr>`).join('') + '</tbody></table>';
+}
+
+function renderJnChart(curve) {
+  const el = document.getElementById('jnChart');
+  if (!curve.length) { el.style.display = 'none'; if (jnChart) { jnChart.dispose(); jnChart = null; } return; }
+  el.style.display = 'block';
+  if (!jnChart) jnChart = echarts.init(el, 'dark');
+  jnChart.setOption({
+    backgroundColor: 'transparent',
+    tooltip: {trigger: 'axis', formatter: ps => { const i = ps[0].dataIndex, c = curve[i] || {};
+      return `#${i + 1} ${h(c.ts_code || '')} ${h(c.date || '')}<br/>本笔 ${rTxt(c.r)} · 累计 ${rTxt(c.cum_r)}`; }},
+    grid: {left: 50, right: 20, top: 30, bottom: 30},
+    xAxis: {type: 'category', name: '笔', data: curve.map((c, i) => i + 1), axisLine: {lineStyle: {color: '#2a3340'}}},
+    yAxis: {type: 'value', name: '累计 R', axisLine: {lineStyle: {color: '#2a3340'}}, splitLine: {lineStyle: {color: '#1b212c'}}},
+    series: [{type: 'line', data: curve.map(c => c.cum_r), showSymbol: curve.length <= 60,
+      lineStyle: {color: '#3b82f6'}, itemStyle: {color: '#3b82f6'}, areaStyle: {color: 'rgba(59,130,246,.12)'},
+      markLine: {silent: true, symbol: 'none', data: [{yAxis: 0}], lineStyle: {color: '#5a6678', type: 'dashed'}, label: {show: false}}}],
+  }, true);
+  setTimeout(() => jnChart && jnChart.resize(), 30);
+}
+
+async function jnCreate() {
+  const body = {ts_code: sv('jnCode'), setup: val('jnSetup'), entry_date: sv('jnEntryDate'),
+    entry_price: nv('jnEntry'), stop_price: nv('jnStop'), shares: nv('jnShares'), fees: nv('jnFees'),
+    note: sv('jnNote'), exit_date: sv('jnExitDate'), exit_price: nv('jnExitPrice')};
+  if (!body.ts_code || !(body.entry_price > 0) || !(body.stop_price > 0) || !(body.shares > 0) || !body.entry_date) {
+    toast('请填写代码、入场日期、入场价、初始止损价和股数', true); return; }
+  if (body.stop_price >= body.entry_price) { toast('初始止损价必须低于入场价', true); return; }
+  if ((body.exit_date == null) !== (body.exit_price == null)) { toast('补录已平仓交易需同时填平仓日期和平仓价', true); return; }
+  const btn = document.getElementById('jnAddBtn');
+  btn.disabled = true;
+  try {
+    const r = await jnApi('/api/journal', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+    toast('已记录 ' + ((r.trade && r.trade.ts_code) || ''));
+    ['jnCode', 'jnEntry', 'jnStop', 'jnShares', 'jnFees', 'jnNote', 'jnExitDate', 'jnExitPrice'].forEach(id => setVal(id, ''));
+    await jnLoad(false);
+  } catch(e) {
+    toast('保存失败：' + e.message, true);
+    if (e.status === 401) jnLoad(false);
+  }
+  btn.disabled = false;
+}
+
+function jnFind(id) { return JN.trades.find(t => +t.id === +id); }
+
+function jnOpenModal(mode, id) {
+  const t = jnFind(id); if (!t) return;
+  JN_MODAL = {mode, id: +t.id};
+  const edit = mode === 'edit';
+  document.getElementById('jnModalTitle').textContent = edit ? `编辑 ${t.ts_code}`
+    : `平仓 ${t.ts_code}（入场 ${fx(t.entry_price)} · 止损 ${fx(t.stop_price)} · ${fmtShares(t.shares)} 股）`;
+  document.getElementById('jnModalEdit').style.display = edit ? 'grid' : 'none';
+  setVal('mCode', t.ts_code); setVal('mSetup', t.setup || ''); setVal('mEntryDate', t.entry_date);
+  setVal('mEntry', t.entry_price); setVal('mStop', t.stop_price); setVal('mShares', t.shares);
+  setVal('mExitDate', t.exit_date || (edit ? '' : todayStr())); setVal('mExitPrice', t.exit_price);
+  setVal('mFees', isNum(t.fees) && +t.fees > 0 ? t.fees : ''); setVal('mNote', t.note || '');
+  document.getElementById('jnModal').classList.add('show');
+  jnModalPreview();
+  if (!edit) setTimeout(() => document.getElementById('mExitPrice').focus(), 30);
+}
+function jnCloseModal() { document.getElementById('jnModal').classList.remove('show'); JN_MODAL = {mode: null, id: null}; }
+
+function jnModalPreview() {
+  const el = document.getElementById('jnModalPreview'), t = jnFind(JN_MODAL.id);
+  if (!t) { el.innerHTML = ''; return; }
+  const edit = JN_MODAL.mode === 'edit';
+  const e = edit ? nv('mEntry') : +t.entry_price, s = edit ? nv('mStop') : +t.stop_price;
+  const n = edit ? nv('mShares') : +t.shares, x = nv('mExitPrice'), f = nv('mFees') || 0;
+  if (!(e > 0) || !(s >= 0) || !(e > s) || !(x > 0)) { el.innerHTML = ''; return; }
+  const r = n > 0 ? ((x - e) * n - f) / ((e - s) * n) : (x - e) / (e - s);
+  el.innerHTML = `本笔 <b class="${rCls(r)}">${rTxt(r)}</b>` + (n > 0 ? ' · 盈亏 ' + money((x - e) * n - f) : '');
+}
+
+async function jnModalSubmit() {
+  const mode = JN_MODAL.mode, id = JN_MODAL.id;
+  if (!jnFind(id)) return;
+  let body;
+  const fees = nv('mFees');
+  if (mode === 'close') {
+    body = {exit_date: sv('mExitDate'), exit_price: nv('mExitPrice'), fees: fees == null ? 0 : fees, note: sv('mNote')};
+    if (!body.exit_date || !(body.exit_price > 0)) { toast('请填写平仓日期和平仓价', true); return; }
+  } else {
+    body = {ts_code: sv('mCode'), setup: val('mSetup') || null, entry_date: sv('mEntryDate'), entry_price: nv('mEntry'),
+      stop_price: nv('mStop'), shares: nv('mShares'), fees: fees == null ? 0 : fees, note: sv('mNote'),
+      exit_date: sv('mExitDate'), exit_price: nv('mExitPrice')};
+  }
+  const btn = document.getElementById('jnModalSave');
+  btn.disabled = true;
+  try {
+    await jnApi('/api/journal/' + id, {method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+    jnCloseModal();
+    toast(mode === 'close' ? '已平仓' : '已保存');
+    await jnLoad(false);
+  } catch(e) {
+    toast('保存失败：' + e.message, true);
+    if (e.status === 401) { jnCloseModal(); jnLoad(false); }
+  }
+  btn.disabled = false;
+}
+
+async function jnDelete(id) {
+  const t = jnFind(id); if (!t) return;
+  if (!confirm(`删除这笔交易？\n${t.ts_code} · ${t.entry_date} 入场 ${fx(t.entry_price)} × ${fmtShares(t.shares)} 股\n删除后无法恢复。`)) return;
+  try {
+    await jnApi('/api/journal/' + (+t.id), {method: 'DELETE'});
+    toast('已删除');
+    await jnLoad(false);
+  } catch(e) {
+    toast('删除失败：' + e.message, true);
+    if (e.status === 401) jnLoad(false);
+  }
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') jnCloseModal(); });
+window.addEventListener('resize', () => { chart && chart.resize(); pfChart && pfChart.resize(); pfHeat && pfHeat.resize(); jnChart && jnChart.resize(); });
 checkHealth(); loadMarkets(); loadRuns(); loadPortfolioDefaults();
+setVal('jnEntryDate', todayStr());
+if (location.hash === '#swing') switchTab('sw');
+else if (location.hash === '#portfolio') switchTab('pf');
 </script>
 </body>
 </html>
