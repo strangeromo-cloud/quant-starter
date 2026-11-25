@@ -39,6 +39,8 @@ import portfolio
 import signals
 
 app = FastAPI(title="Quant 回测平台")
+from webapp.migration_access import migration_access
+app.middleware("http")(migration_access)
 
 STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 
